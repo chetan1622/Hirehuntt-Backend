@@ -37,6 +37,7 @@ function AuthPage({ onLogin }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [resendCount, setResendCount] = useState(0)
 
   const handleRegister = async (e) => {
     e.preventDefault()
@@ -73,6 +74,32 @@ function AuthPage({ onLogin }) {
       onLogin(data.user_id, data.username, data.is_admin)
     } catch (err) { setError('Network error.') }
     setLoading(false)
+  }
+
+  const handleResendOTP = async (e, isForgot = false) => {
+    e.preventDefault();
+    if (resendCount >= 2) {
+      setError('Too many attempts. Please try again later.');
+      return;
+    }
+    setLoading(true); setError(''); setSuccess('');
+    try {
+      const endpoint = isForgot ? '/forgot-password-otp' : '/register';
+      const body = isForgot 
+        ? { username: username.trim(), email: email.trim() }
+        : { username: username.trim(), email: email.trim(), password: password.trim() };
+        
+      const res = await fetch(`${API}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.detail || 'Failed to resend OTP'); setLoading(false); return; }
+      setSuccess('OTP resent successfully!');
+      setResendCount(prev => prev + 1);
+    } catch (err) { setError('Network error.') }
+    setLoading(false);
   }
 
   const handleLogin = async (e) => {
@@ -140,14 +167,14 @@ function AuthPage({ onLogin }) {
         { (view === 'login' || view === 'register') && (
           <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 4, marginBottom: 20, gap: 4 }}>
             <button
-              onClick={() => {setView('login'); setError(''); setSuccess('')}}
+              onClick={() => {setView('login'); setError(''); setSuccess(''); setResendCount(0)}}
               style={{
                 flex: 1, padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
                 background: view === 'login' ? 'var(--accent-indigo)' : 'transparent',
                 color: view === 'login' ? '#fff' : 'var(--text-muted)'
               }}>🔑 Login</button>
             <button
-              onClick={() => {setView('register'); setError(''); setSuccess('')}}
+              onClick={() => {setView('register'); setError(''); setSuccess(''); setResendCount(0)}}
               style={{
                 flex: 1, padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
                 background: view === 'register' ? 'var(--accent-indigo)' : 'transparent',
@@ -192,6 +219,11 @@ function AuthPage({ onLogin }) {
           <form onSubmit={handleVerify}>
             <div className="form-group"><label>Enter OTP sent to {email}</label><input type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="6-digit OTP"/></div>
             <button className="btn-primary" type="submit" disabled={loading}>{loading ? '⏳' : 'Verify & Login'}</button>
+            <p style={{ textAlign: 'center', fontSize: 12, marginTop: 14 }}>
+              <span style={{ color: resendCount >= 2 ? 'var(--text-muted)' : 'var(--accent-indigo)', cursor: resendCount >= 2 ? 'not-allowed' : 'pointer' }} onClick={(e) => resendCount < 2 && handleResendOTP(e, false)}>
+                {resendCount >= 2 ? 'Try again later' : 'Resend OTP'}
+              </span>
+            </p>
           </form>
         )}
 
@@ -239,6 +271,11 @@ function AuthPage({ onLogin }) {
               </div>
             </div>
             <button className="btn-primary" type="submit" disabled={loading}>{loading ? '⏳' : 'Save New Password'}</button>
+            <p style={{ textAlign: 'center', fontSize: 12, marginTop: 14 }}>
+              <span style={{ color: resendCount >= 2 ? 'var(--text-muted)' : 'var(--accent-indigo)', cursor: resendCount >= 2 ? 'not-allowed' : 'pointer' }} onClick={(e) => resendCount < 2 && handleResendOTP(e, true)}>
+                {resendCount >= 2 ? 'Try again later' : 'Resend OTP'}
+              </span>
+            </p>
           </form>
         )}
       </div>
