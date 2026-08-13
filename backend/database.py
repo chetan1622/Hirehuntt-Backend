@@ -81,6 +81,28 @@ class Review(Base):
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        admin_user = db.query(User).filter(User.username == "admin1622").first()
+        if not admin_user:
+            new_admin = User(
+                username="admin1622",
+                password_hash="Atul@7276",
+                is_admin=1,
+                last_active=datetime.utcnow()
+            )
+            db.add(new_admin)
+            db.flush()
+            admin_profile = Profile(
+                user_id=new_admin.id,
+                name="System Admin",
+                plan_type="admin",
+                payment_status="paid"
+            )
+            db.add(admin_profile)
+            db.commit()
+    finally:
+        db.close()
 
 def get_db():
     db = SessionLocal()
