@@ -56,9 +56,6 @@ def send_email_report(matched_jobs, receiver_email, custom_sender_email=None, cu
                     {score}%
                 </span>
             </td>
-            <td style="padding: 12px 15px; text-align: center; color: #1F2937; font-weight: 500; font-size: 13px;">
-                {best_match}
-            </td>
             <td style="padding: 12px 15px; font-size: 12px; max-width: 250px;">
                 {missing_html}
             </td>
@@ -147,20 +144,16 @@ def send_email_report(matched_jobs, receiver_email, custom_sender_email=None, cu
             
             <table cellpadding="0" cellspacing="0" style="width: 100%; background-color: #F3F4F6; border-bottom: 1px solid #E5E7EB; padding: 15px; text-align: center;">
                 <tr>
-                    <td style="width: 33.33%; text-align: center; padding: 10px 0;">
+                    <td style="text-align: center; padding: 10px 0;">
                         <div style="font-size: 22px; font-weight: 700; color: #1E3A8A;">{len(matched_jobs)}</div>
-                        <div style="font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Total Scanned</div>
-                    </td>
-                    <td style="width: 33.33%; text-align: center; border-left: 1px solid #E5E7EB; border-right: 1px solid #E5E7EB; padding: 10px 0;">
-                        <div style="font-size: 22px; font-weight: 700; color: #10B981;">{ds_count}</div>
-                        <div style="font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Data Science Matches</div>
-                    </td>
-                    <td style="width: 33.33%; text-align: center; padding: 10px 0;">
-                        <div style="font-size: 22px; font-weight: 700; color: #3B82F6;">{da_count}</div>
-                        <div style="font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Data Analyst Matches</div>
+                        <div style="font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Total Jobs Found</div>
                     </td>
                 </tr>
             </table>
+            
+            <div style="padding: 10px; text-align: center; background-color: #FEF3C7; color: #92400E; font-size: 13px; font-weight: bold;">
+                📌 For more info & better viewing experience, please open this email in desktop mode or on a laptop.
+            </div>
             
             <div style="overflow-x: auto;">
                 <table>
@@ -170,7 +163,6 @@ def send_email_report(matched_jobs, receiver_email, custom_sender_email=None, cu
                             <th>Company</th>
                             <th>Location</th>
                             <th style="text-align: center;">Match Score</th>
-                            <th style="text-align: center;">Target Profile</th>
                             <th>Missing Keywords / Feedback</th>
                         </tr>
                     </thead>
