@@ -597,15 +597,17 @@ function JobHistoryTab({ userId }) {
                         return (
                           <div key={idx} style={{ padding: 12, border: '1px solid #F3F4F6', borderRadius: 8, background: '#F9FAFB' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                              <a href={job.link} target="_blank" rel="noreferrer" style={{ fontSize: 14, fontWeight: 600, color: '#2563EB', textDecoration: 'none' }}>
+                              <h5 style={{ fontSize: 15, margin: 0, fontWeight: 600, color: '#111827' }}>
                                 {job.title}
-                              </a>
+                              </h5>
                               <span style={{ background: badgeBg, color: badgeColor, padding: '4px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
                                 {score}% Match
                               </span>
                             </div>
                             <p style={{ margin: '4px 0 8px', fontSize: 13, color: '#374151', fontWeight: 500 }}>{job.company} • <span style={{color: '#6B7280', fontWeight: 400}}>{job.location}</span></p>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            
+                            {/* Missing Keywords */}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
                               {job.match_info?.missing_keywords?.slice(0, 5).map((kw, i) => (
                                 <span key={i} style={{ background: '#E5E7EB', color: '#4B5563', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>{kw}</span>
                               ))}
@@ -613,6 +615,22 @@ function JobHistoryTab({ userId }) {
                                 <span style={{ fontSize: 11, color: '#9CA3AF' }}>+{job.match_info.missing_keywords.length - 5} more</span>
                               )}
                             </div>
+
+                            {/* Apply Button */}
+                            <a href={job.link} target="_blank" rel="noreferrer" style={{
+                              display: 'block',
+                              background: 'var(--accent-indigo)',
+                              color: 'white',
+                              textAlign: 'center',
+                              padding: '8px 0',
+                              borderRadius: '6px',
+                              textDecoration: 'none',
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              marginTop: '8px'
+                            }}>
+                              Apply Now 🚀
+                            </a>
                           </div>
                         )
                       })}
