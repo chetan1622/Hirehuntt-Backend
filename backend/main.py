@@ -204,7 +204,7 @@ def verify_registration_otp(data: VerifyOTP, db: Session = Depends(get_db)):
     db.refresh(new_user)
     
     del registration_cache[email]
-    return {"message": "Account created successfully!", "user_id": new_user.id, "is_admin": False}
+    return {"message": "Account created successfully!", "user_id": new_user.id, "username": new_user.username, "is_admin": False}
 
 @app.post("/api/forgot-password-otp")
 def forgot_password_otp(data: ForgotPassword, db: Session = Depends(get_db)):
