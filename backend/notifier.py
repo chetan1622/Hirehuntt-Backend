@@ -180,22 +180,35 @@ def send_email_report(matched_jobs, receiver_email, custom_sender_email=None, cu
     </html>
     """
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Daily Job Match Report - {len(matched_jobs)} Jobs Found"
-    msg["From"] = sender_email
-    msg["To"] = receiver_email
-    msg.attach(MIMEText(html_content, "html"))
+    import requests
+
+    api_key = getattr(config, "RESEND_API_KEY", None)
+    if not api_key:
+        print("Resend API Key not provided. Cannot send report.")
+        return False
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "from": f"HireHuntt <{sender_email}>",
+        "to": [receiver_email],
+        "subject": f"Daily Job Match Report - {len(matched_jobs)} Jobs Found",
+        "html": html_content
+    }
 
     try:
-        print(f"Connecting to SMTP server {config.SMTP_SERVER}:{config.SMTP_PORT}...")
-        server = smtplib.SMTP(config.SMTP_SERVER, config.SMTP_PORT)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        print("Logged in successfully. Sending email...")
-        server.sendmail(sender_email, receiver_email, msg.as_string())
-        server.quit()
-        print("Email sent successfully!")
-        return True
+        print(f"Sending email report via Resend API to {receiver_email}...")
+        response = requests.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10)
+        
+        if response.status_code in [200, 201]:
+            print("Email sent successfully via Resend!")
+            return True
+        else:
+            print(f"Error sending email via Resend: {response.text}")
+            return False
     except Exception as e:
-        print(f"Error sending email: {e}")
+        print(f"Exception sending email report via Resend: {e}")
         return False

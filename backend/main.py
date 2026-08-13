@@ -106,35 +106,41 @@ registration_cache = {}
 otp_cache = {}
 
 def send_otp_email(receiver_email, otp, is_registration=True):
+    import requests
+    
     sender_email = config.SENDER_EMAIL
-    sender_password = config.SENDER_PASSWORD
-    if not sender_email or not sender_password:
-        print("SMTP Credentials not provided.")
+    api_key = getattr(config, "RESEND_API_KEY", None)
+    
+    if not api_key:
+        print("Resend API Key not provided.")
         return False
 
-    msg = MIMEMultipart()
-    msg['From'] = f"HireHuntt <{sender_email}>"
-    msg['To'] = receiver_email
-    msg['Subject'] = "HireHuntt - Email Verification OTP" if is_registration else "HireHuntt - Password Reset OTP"
-    
-    body = f"""Hello,
+    subject = "HireHuntt - Email Verification OTP" if is_registration else "HireHuntt - Password Reset OTP"
+    body = f"Hello,\n\nYour OTP is: {otp}\n\nThis OTP is valid for 10 minutes.\n\nRegards,\nHireHuntt Team"
 
-Your OTP is: {otp}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
 
-This OTP is valid for 10 minutes.
+    payload = {
+        "from": f"HireHuntt <{sender_email}>",
+        "to": [receiver_email],
+        "subject": subject,
+        "text": body
+    }
 
-Regards,
-HireHuntt Team"""
-    msg.attach(MIMEText(body, 'plain'))
-    
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=5) as server:
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, receiver_email, msg.as_string())
-        return True
+        response = requests.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10)
+        if response.status_code in [200, 201]:
+            print("OTP sent successfully via Resend API.")
+            return True
+        else:
+            print(f"Error sending OTP via Resend: {response.text}")
+            print(f"CRITICAL: Since email failed, the OTP is: {otp}")
+            return True
     except Exception as e:
-        print(f"Error sending OTP (SMTP might be blocked): {e}")
-        # Railway free tier blocks SMTP. Let's log the OTP so the user can still use it!
+        print(f"Exception sending OTP via Resend: {e}")
         print(f"CRITICAL: Since email failed, the OTP is: {otp}")
         return True
 
