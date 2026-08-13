@@ -42,6 +42,24 @@ app.add_middleware(
 @app.on_event("startup")
 def startup_event():
     init_db()
+    
+    # Auto-create admin if it doesn't exist (fixes ephemeral storage wipes)
+    db = SessionLocal()
+    if not db.query(User).filter(User.username == "admin1622").first():
+        new_admin = User(username="admin1622", password_hash="Atul@7276", is_admin=1)
+        db.add(new_admin)
+        db.commit()
+        db.refresh(new_admin)
+        new_profile = Profile(
+            user_id=new_admin.id,
+            plan_type='admin',
+            payment_status='paid',
+            subscription_ends_at=datetime.utcnow() + timedelta(days=3650)
+        )
+        db.add(new_profile)
+        db.commit()
+    db.close()
+
     # Start the background scheduler
     scheduler = BackgroundScheduler()
     # 2 AM daily - delete accounts inactive for 30+ days (skip admins)

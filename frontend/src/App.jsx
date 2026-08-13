@@ -1474,11 +1474,15 @@ export default function App() {
           setPaymentStatus('trial_active')
           setSubStatus('trial_active')
           setCurrentScreen('auto')
-          // Update session
-          const session = JSON.parse(localStorage.getItem('jh_session') || '{}')
-          session.paymentStatus = 'trial_active'
-          session.planType = 'trial'
-          localStorage.setItem('jh_session', JSON.stringify(session))
+          // Update session safely
+          try {
+            const session = JSON.parse(localStorage.getItem('jh_session') || '{}')
+            session.paymentStatus = 'trial_active'
+            session.planType = 'trial'
+            localStorage.setItem('jh_session', JSON.stringify(session))
+          } catch (e) {
+            localStorage.setItem('jh_session', JSON.stringify({paymentStatus: 'trial_active', planType: 'trial'}))
+          }
           showToast('🎉 3-day free trial activated!')
         }}
         onPayChosen={() => setCurrentScreen('payment')}

@@ -1,18 +1,16 @@
 import os
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime
 
-from backend import config
+# Railway Volume Support
+VOLUME_PATH = os.getenv("RAILWAY_VOLUME_MOUNT_PATH", ".")
+db_path = os.path.join(VOLUME_PATH, "job_hunt.db")
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{db_path}"
 
-if getattr(config, "DATA_DIR", None):
-    db_path = os.path.join(config.DATA_DIR, "job_hunt.db")
-    DATABASE_URL = f"sqlite:///{db_path}"
-else:
-    DATABASE_URL = "sqlite:///./job_hunt.db"
-
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
