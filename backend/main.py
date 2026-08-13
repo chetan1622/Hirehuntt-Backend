@@ -449,7 +449,15 @@ def get_logs(user_id: int, db: Session = Depends(get_db)):
 # Job Match History
 @app.get("/api/job-history/{user_id}")
 def get_job_history(user_id: int, db: Session = Depends(get_db)):
-    history = db.query(JobMatchHistory).filter(JobMatchHistory.user_id == user_id).order_by(JobMatchHistory.date.desc()).limit(10).all()
+    cutoff_date = datetime.utcnow() - timedelta(days=7)
+    history = db.query(JobMatchHistory).filter(
+        JobMatchHistory.user_id == user_id,
+        JobMatchHistory.date >= cutoff_date
+    ).order_by(JobMatchHistory.date.desc()).all()
+    
+    if not history:
+        return []
+        
     result = []
     for entry in history:
         try:

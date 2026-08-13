@@ -285,7 +285,7 @@ function AuthPage({ onLogin }) {
 }
 
 // Profile Tab
-function ProfileTab({ userId, toast }) {
+function ProfileTab({ userId, toast, onExpired }) {
   const [name, setName] = useState('')
   const [qualification, setQualification] = useState('')
   const [roles, setRoles] = useState([])
@@ -374,7 +374,7 @@ function ProfileTab({ userId, toast }) {
       } else if (res.status === 429) {
         toast('✉️ Email already sent today! Check your inbox.')
       } else if (res.status === 403) {
-        toast('⚠️ Subscription expired. Please pay to continue.')
+        if (onExpired) onExpired()
       } else {
         toast(data.detail || 'Error starting pipeline')
       }
@@ -560,6 +560,10 @@ function JobHistoryTab({ userId }) {
         <button className="btn-secondary" style={{ width: 'auto', padding: '8px 14px', fontSize: 12 }} onClick={refresh}>
           Refresh
         </button>
+      </div>
+      
+      <div style={{ background: '#FEF3C7', color: '#92400E', padding: '10px 14px', borderRadius: 8, fontSize: 12, marginBottom: 16, border: '1px solid #FDE68A' }}>
+        <strong>Note:</strong> Job apply links are automatically removed from the app after 7 days to keep your feed clean. Please apply promptly!
       </div>
 
       {history.length === 0 ? (
@@ -1187,7 +1191,7 @@ function PaymentPage({ userId, onPaymentSubmitted, onBack }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent-indigo)', marginBottom: 12 }}>Step 1 — Scan & Pay via UPI</div>
           <div className="qr-section">
             <div className="qr-box">
-              <img src="/payment_qr.jpg" alt="UPI Payment QR Code" />
+              <img src="/payment_qr.jpg" alt="UPI Payment QR Code" style={{ clipPath: 'inset(0 0 15% 0)', transform: 'translateY(8%)' }} />
             </div>
             <div className="qr-details">
               <div className="qr-detail-row">
@@ -1528,7 +1532,7 @@ export default function App() {
         )}
 
         {/* Tab Content */}
-        {activeTab === 'profile' && <ProfileTab userId={userId} toast={showToast} />}
+        {activeTab === 'profile' && <ProfileTab userId={userId} toast={showToast} onExpired={() => setCurrentScreen('payment')} />}
         {activeTab === 'logs' && <JobHistoryTab userId={userId} />}
         {activeTab === 'mncs' && <TopMncTab />}
         {activeTab === 'feedback' && <FeedbackTab userId={userId} toast={showToast} />}
