@@ -9,14 +9,14 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Bac
 
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
+from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from backend import config
-from backend.database import init_db, get_db, User, Profile, Log, SentJob, Review, SessionLocal
+from backend.database import engine, Base, init_db, get_db, User, Profile, Log, Review, JobMatchHistory, SessionLocal
 from backend.linkedin_scraper import scrape_linkedin_jobs
 from backend.career_scraper import scrape_career_sites
 from backend.resume_matcher import ResumeMatcher
@@ -448,6 +448,23 @@ def get_logs(user_id: int, db: Session = Depends(get_db)):
         })
     return result
 
+# Job Match History
+@app.get("/api/job-history/{user_id}")
+def get_job_history(user_id: int, db: Session = Depends(get_db)):
+    history = db.query(JobMatchHistory).filter(JobMatchHistory.user_id == user_id).order_by(JobMatchHistory.date.desc()).limit(10).all()
+    result = []
+    for entry in history:
+        try:
+            jobs = json.loads(entry.jobs_json)
+        except Exception:
+            jobs = []
+        result.append({
+            "id": entry.id,
+            "date": entry.date.strftime("%B %d, %Y - %I:%M %p"),
+            "jobs": jobs
+        })
+    return result
+
 # Core pipeline execution (Async in background)
 def run_job_hunt_pipeline(user_id: int):
     db = SessionLocal()
@@ -522,6 +539,15 @@ def run_job_hunt_pipeline(user_id: int):
             status="success" if success else "failed"
         )
         db.add(log_entry)
+        
+        # Save to JobMatchHistory
+        if matched_jobs:
+            history_entry = JobMatchHistory(
+                user_id=user_id,
+                jobs_json=json.dumps(matched_jobs)
+            )
+            db.add(history_entry)
+            
         db.commit()
     except Exception as e:
         error_msg = str(e)[:200]

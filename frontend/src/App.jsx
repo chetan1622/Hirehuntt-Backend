@@ -522,22 +522,23 @@ function ProfileTab({ userId, toast }) {
   )
 }
 
-// Logs Tab
-function LogsTab({ userId }) {
-  const [logs, setLogs] = useState([])
+// Job History Tab
+function JobHistoryTab({ userId }) {
+  const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
+  const [expandedDate, setExpandedDate] = useState(null)
 
   useEffect(() => {
-    fetch(`${API}/logs/${userId}`).then(r => r.json()).then(data => {
-      setLogs(data)
+    fetch(`${API}/job-history/${userId}`).then(r => r.json()).then(data => {
+      setHistory(data)
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [userId])
 
   const refresh = () => {
     setLoading(true)
-    fetch(`${API}/logs/${userId}`).then(r => r.json()).then(data => {
-      setLogs(data)
+    fetch(`${API}/job-history/${userId}`).then(r => r.json()).then(data => {
+      setHistory(data)
       setLoading(false)
     }).catch(() => setLoading(false))
   }
@@ -546,7 +547,7 @@ function LogsTab({ userId }) {
     return (
       <div className="empty-state">
         <div className="spinner" style={{ width: 24, height: 24, borderWidth: 3 }}></div>
-        <p style={{ marginTop: 12 }}>Loading logs...</p>
+        <p style={{ marginTop: 12 }}>Loading job matches...</p>
       </div>
     )
   }
@@ -554,32 +555,74 @@ function LogsTab({ userId }) {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: 16, fontWeight: 600 }}>📬 Email History</h3>
+        <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: 16, fontWeight: 600 }}>📬 Job Match History</h3>
         <button className="btn-secondary" style={{ width: 'auto', padding: '8px 14px', fontSize: 12 }} onClick={refresh}>
           Refresh
         </button>
       </div>
 
-      {logs.length === 0 ? (
+      {history.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">📭</div>
-          <p>No emails sent yet.<br />Go to Profile tab and click "Run Job Match".</p>
+          <p>No jobs found yet.<br />Go to Profile tab and click "Run Job Match Manually".</p>
         </div>
       ) : (
-        logs.map(log => (
-          <div className="log-card" key={log.id}>
-            <div className="log-header">
-              <span className="log-date">📅 {log.timestamp}</span>
-              <span className={`log-status ${log.status}`}>{log.status}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {history.map(day => (
+            <div key={day.id} style={{ 
+              background: 'white', border: '1px solid #E5E7EB', borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+            }}>
+              <div 
+                style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: expandedDate === day.id ? '#F9FAFB' : 'white' }}
+                onClick={() => setExpandedDate(expandedDate === day.id ? null : day.id)}
+              >
+                <div>
+                  <h4 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#111827' }}>📅 {day.date}</h4>
+                  <p style={{ margin: 0, fontSize: 12, color: '#6B7280', marginTop: 4 }}>{day.jobs.length} jobs matched</p>
+                </div>
+                <div style={{ transform: expandedDate === day.id ? 'rotate(180deg)' : 'none', transition: '0.2s', fontSize: 12 }}>▼</div>
+              </div>
+              
+              {expandedDate === day.id && (
+                <div style={{ padding: '0 16px 16px', borderTop: '1px solid #E5E7EB' }}>
+                  {day.jobs.length === 0 ? (
+                    <p style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', margin: '20px 0' }}>No jobs matched your criteria on this day.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+                      {day.jobs.map((job, idx) => {
+                        const score = job.match_info?.score || 0;
+                        const badgeColor = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#EF4444';
+                        const badgeBg = score >= 80 ? '#ECFDF5' : score >= 50 ? '#FFFBEB' : '#FEF2F2';
+                        
+                        return (
+                          <div key={idx} style={{ padding: 12, border: '1px solid #F3F4F6', borderRadius: 8, background: '#F9FAFB' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                              <a href={job.link} target="_blank" rel="noreferrer" style={{ fontSize: 14, fontWeight: 600, color: '#2563EB', textDecoration: 'none' }}>
+                                {job.title}
+                              </a>
+                              <span style={{ background: badgeBg, color: badgeColor, padding: '4px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                {score}% Match
+                              </span>
+                            </div>
+                            <p style={{ margin: '4px 0 8px', fontSize: 13, color: '#374151', fontWeight: 500 }}>{job.company} • <span style={{color: '#6B7280', fontWeight: 400}}>{job.location}</span></p>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                              {job.match_info?.missing_keywords?.slice(0, 5).map((kw, i) => (
+                                <span key={i} style={{ background: '#E5E7EB', color: '#4B5563', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>{kw}</span>
+                              ))}
+                              {job.match_info?.missing_keywords?.length > 5 && (
+                                <span style={{ fontSize: 11, color: '#9CA3AF' }}>+{job.match_info.missing_keywords.length - 5} more</span>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <div className="log-count">
-              {log.matched_count} <span>companies matched</span>
-            </div>
-            <div className="log-companies">
-              {log.companies.length > 0 ? log.companies.join(', ') : 'No companies'}
-            </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
     </>
   )
@@ -1422,7 +1465,7 @@ export default function App() {
 
         {/* Tab Content */}
         {activeTab === 'profile' && <ProfileTab userId={userId} toast={showToast} />}
-        {activeTab === 'logs' && <LogsTab userId={userId} />}
+        {activeTab === 'logs' && <JobHistoryTab userId={userId} />}
         {activeTab === 'feedback' && <FeedbackTab userId={userId} toast={showToast} />}
         {activeTab === 'admin' && isAdmin && <AdminTab toast={showToast} />}
 

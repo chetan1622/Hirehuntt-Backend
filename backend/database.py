@@ -28,6 +28,7 @@ class User(Base):
     logs = relationship("Log", back_populates="user")
     sent_jobs = relationship("SentJob", back_populates="user")
     reviews = relationship("Review", back_populates="user")
+    job_history = relationship("JobMatchHistory", back_populates="user")
 
 class Profile(Base):
     __tablename__ = "profiles"
@@ -84,6 +85,16 @@ class Review(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", back_populates="reviews")
+
+class JobMatchHistory(Base):
+    """Stores the daily job matches for a user to display in the app."""
+    __tablename__ = "job_match_history"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    date = Column(DateTime, default=datetime.utcnow)
+    jobs_json = Column(Text) # JSON string of the jobs array
+    
+    user = relationship("User", back_populates="job_history")
 
 def init_db():
     Base.metadata.create_all(bind=engine)
