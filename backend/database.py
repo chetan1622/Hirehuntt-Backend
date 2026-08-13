@@ -29,6 +29,7 @@ class User(Base):
     sent_jobs = relationship("SentJob", back_populates="user")
     reviews = relationship("Review", back_populates="user")
     job_history = relationship("JobMatchHistory", back_populates="user")
+    saved_jobs = relationship("SavedJob", back_populates="user")
 
 class Profile(Base):
     __tablename__ = "profiles"
@@ -97,6 +98,19 @@ class JobMatchHistory(Base):
     jobs_json = Column(Text) # JSON string of the jobs array
     
     user = relationship("User", back_populates="job_history")
+
+class SavedJob(Base):
+    """Stores individual jobs that the user has bookmarked."""
+    __tablename__ = "saved_jobs"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    title = Column(String)
+    company = Column(String)
+    location = Column(String)
+    link = Column(String)
+    saved_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User", back_populates="saved_jobs")
 
 def init_db():
     Base.metadata.create_all(bind=engine)

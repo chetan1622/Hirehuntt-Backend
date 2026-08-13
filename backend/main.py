@@ -16,7 +16,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from backend import config
-from backend.database import engine, Base, init_db, get_db, User, Profile, Log, Review, JobMatchHistory, SessionLocal
+from backend.database import engine, Base, init_db, get_db, User, Profile, Log, Review, JobMatchHistory, SavedJob, SessionLocal
 from backend.linkedin_scraper import scrape_linkedin_jobs
 from backend.career_scraper import scrape_career_sites
 from backend.resume_matcher import ResumeMatcher
@@ -51,6 +51,20 @@ def startup_event():
     scheduler.start()
 
 # Pydantic schemas
+class JobMatch(BaseModel):
+    title: str
+    company: str
+    location: str
+    link: str
+    score: float
+    description: str
+
+class SavedJobCreate(BaseModel):
+    title: str
+    company: str
+    location: str
+    link: str
+
 class UserCreate(BaseModel):
     username: str
     email: str
@@ -368,6 +382,46 @@ def choose_plan(user_id: int, data: ChoosePlan, db: Session = Depends(get_db)):
         return {"message": "Proceed to payment", "action": "show_payment"}
     else:
         raise HTTPException(status_code=400, detail="Invalid plan")
+
+# ============================================================
+# SAVED JOBS API
+# ============================================================
+
+@app.get("/api/saved-jobs/{user_id}")
+def get_saved_jobs(user_id: int, db: Session = Depends(get_db)):
+    jobs = db.query(SavedJob).filter(SavedJob.user_id == user_id).order_by(SavedJob.saved_at.desc()).all()
+    return jobs
+
+@app.post("/api/saved-jobs/{user_id}")
+def save_job(user_id: int, job_data: SavedJobCreate, db: Session = Depends(get_db)):
+    # Avoid duplicates
+    existing = db.query(SavedJob).filter(
+        SavedJob.user_id == user_id, 
+        SavedJob.link == job_data.link
+    ).first()
+    if existing:
+        return {"message": "Job already saved"}
+        
+    new_job = SavedJob(
+        user_id=user_id,
+        title=job_data.title,
+        company=job_data.company,
+        location=job_data.location,
+        link=job_data.link
+    )
+    db.add(new_job)
+    db.commit()
+    return {"message": "Job saved successfully"}
+
+@app.delete("/api/saved-jobs/{user_id}/{job_id}")
+def remove_saved_job(user_id: int, job_id: int, db: Session = Depends(get_db)):
+    job = db.query(SavedJob).filter(SavedJob.id == job_id, SavedJob.user_id == user_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Saved job not found")
+    
+    db.delete(job)
+    db.commit()
+    return {"message": "Job removed successfully"}
 
 # Admin Endpoints
 @app.get("/api/admin/users")

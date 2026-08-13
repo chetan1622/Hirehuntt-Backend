@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { ALL_ROLES } from './roles'
 import { TOP_MNCS } from './mncs'
+import { INTERVIEW_DATA, GENERAL_INTERVIEW_DATA } from './interview_data'
 
 const API = "https://api.hirehuntt.in/api"
 
@@ -621,21 +622,42 @@ function JobHistoryTab({ userId }) {
                               )}
                             </div>
 
-                            {/* Apply Button */}
-                            <a href={job.link} target="_blank" rel="noreferrer" style={{
-                              display: 'block',
-                              background: 'var(--accent-indigo)',
-                              color: 'white',
-                              textAlign: 'center',
-                              padding: '8px 0',
-                              borderRadius: '6px',
-                              textDecoration: 'none',
-                              fontSize: '13px',
-                              fontWeight: '600',
-                              marginTop: '8px'
-                            }}>
-                              Apply Now 🚀
-                            </a>
+                            {/* Action Buttons */}
+                            <div style={{ display: 'flex', gap: 8, marginTop: '8px' }}>
+                              <a href={job.link} target="_blank" rel="noreferrer" style={{
+                                flex: 1,
+                                background: 'var(--accent-indigo)',
+                                color: 'white',
+                                textAlign: 'center',
+                                padding: '8px 0',
+                                borderRadius: '6px',
+                                textDecoration: 'none',
+                                fontSize: '13px',
+                                fontWeight: '600'
+                              }}>
+                                Apply Now 🚀
+                              </a>
+                              <button style={{
+                                flex: 1,
+                                background: '#FFFBEB',
+                                color: '#D97706',
+                                border: '1px solid #FDE68A',
+                                borderRadius: '6px',
+                                padding: '8px 0',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                              }} onClick={(e) => {
+                                e.stopPropagation()
+                                fetch(`${API}/saved-jobs/${userId}`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify(job)
+                                }).then(r => r.json()).then(data => alert(data.message)).catch(() => alert('Network error'))
+                              }}>
+                                ⭐ Save Job
+                              </button>
+                            </div>
                           </div>
                         )
                       })}
@@ -1514,9 +1536,17 @@ export default function App() {
               onClick={() => setActiveTab('logs')}>
               📬 History
             </button>
+            <button className={`nav-tab ${activeTab === 'saved' ? 'active' : ''}`}
+              onClick={() => setActiveTab('saved')}>
+              ⭐ Saved
+            </button>
+            <button className={`nav-tab ${activeTab === 'prep' ? 'active' : ''}`}
+              onClick={() => setActiveTab('prep')}>
+              🎯 Prep Kit
+            </button>
             <button className={`nav-tab ${activeTab === 'mncs' ? 'active' : ''}`}
               onClick={() => setActiveTab('mncs')}>
-              🏢 Top MNCs
+              🏢 MNCs
             </button>
             <button className={`nav-tab ${activeTab === 'feedback' ? 'active' : ''}`}
               onClick={() => setActiveTab('feedback')}>
@@ -1534,6 +1564,8 @@ export default function App() {
         {/* Tab Content */}
         {activeTab === 'profile' && <ProfileTab userId={userId} toast={showToast} onExpired={() => setCurrentScreen('payment')} />}
         {activeTab === 'logs' && <JobHistoryTab userId={userId} />}
+        {activeTab === 'saved' && <SavedJobsTab userId={userId} />}
+        {activeTab === 'prep' && <InterviewPrepTab />}
         {activeTab === 'mncs' && <TopMncTab />}
         {activeTab === 'feedback' && <FeedbackTab userId={userId} toast={showToast} />}
         {activeTab === 'admin' && isAdmin && <AdminTab toast={showToast} />}
