@@ -449,11 +449,13 @@ def get_logs(user_id: int, db: Session = Depends(get_db)):
     return result
 
 # Core pipeline execution (Async in background)
-def run_job_hunt_pipeline(user_id: int, db: Session):
-    profile = db.query(Profile).filter(Profile.user_id == user_id).first()
-    if not profile or not profile.receiver_email:
-        print(f"Skipping pipeline for user {user_id}: Profile or receiver email missing.")
-        return
+def run_job_hunt_pipeline(user_id: int):
+    db = SessionLocal()
+    try:
+        profile = db.query(Profile).filter(Profile.user_id == user_id).first()
+        if not profile or not profile.receiver_email:
+            print(f"Skipping pipeline for user {user_id}: Profile or receiver email missing.")
+            return
         
     roles = []
     if profile.searching_roles:
@@ -521,6 +523,8 @@ def run_job_hunt_pipeline(user_id: int, db: Session):
     )
     db.add(log_entry)
     db.commit()
+    finally:
+        db.close()
 
 @app.post("/api/run-matching/{user_id}")
 def trigger_matching(user_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
@@ -553,7 +557,7 @@ def trigger_matching(user_id: int, background_tasks: BackgroundTasks, db: Sessio
         raise HTTPException(status_code=429, detail="Email already sent today. You can run this once per day.")
         
     # Queue the scraper pipeline task in the background
-    background_tasks.add_task(run_job_hunt_pipeline, user_id, db)
+    background_tasks.add_task(run_job_hunt_pipeline, user_id)
     return {"message": "Job hunt pipeline started in the background. You will receive an email shortly."}
 
 # ============================================================
