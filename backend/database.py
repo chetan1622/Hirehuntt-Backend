@@ -39,6 +39,8 @@ class Profile(Base):
     searching_roles = Column(String, nullable=True) # Comma-separated roles (e.g. "Data Scientist, Data Analyst")
     location = Column(String, default="India")
     experience = Column(String, nullable=True)
+    job_level = Column(String, default="Any Level")
+    skills = Column(String, nullable=True)
     receiver_email = Column(String, nullable=True)
     ds_resume_path = Column(String, nullable=True)
     da_resume_path = Column(String, nullable=True)

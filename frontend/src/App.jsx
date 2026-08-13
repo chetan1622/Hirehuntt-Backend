@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { ALL_ROLES } from './roles'
+import { TOP_MNCS } from './mncs'
 
 const API = "https://api.hirehuntt.in/api"
 
@@ -642,6 +643,47 @@ function JobHistoryTab({ userId }) {
           ))}
         </div>
       )}
+    </>
+  )
+}
+
+// Top MNCs Tab
+function TopMncTab() {
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: 16, fontWeight: 600 }}>🏢 Top 50 MNCs in India</h3>
+      </div>
+      <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 20 }}>
+        Click on any company to visit their official career page for India.
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16 }}>
+        {TOP_MNCS.map((mnc, idx) => (
+          <a key={idx} href={mnc.link} target="_blank" rel="noreferrer" style={{
+            background: 'white',
+            border: '1px solid #E5E7EB',
+            borderRadius: 12,
+            padding: 16,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textDecoration: 'none',
+            color: '#111827',
+            transition: 'transform 0.2s, box-shadow 0.2s',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            cursor: 'pointer'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'; }}>
+            <div style={{ width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+              <img src={mnc.logo} alt={mnc.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 600, textAlign: 'center' }}>{mnc.name}</span>
+          </a>
+        ))}
+      </div>
     </>
   )
 }
@@ -1459,7 +1501,7 @@ export default function App() {
 
         {/* Navigation Tabs */}
         {!isAdmin ? (
-          <div className="nav-tabs">
+          <div className="nav-tabs" style={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: '4px' }}>
             <button className={`nav-tab ${activeTab === 'profile' ? 'active' : ''}`}
               onClick={() => setActiveTab('profile')}>
               ⚙️ Profile
@@ -1467,6 +1509,10 @@ export default function App() {
             <button className={`nav-tab ${activeTab === 'logs' ? 'active' : ''}`}
               onClick={() => setActiveTab('logs')}>
               📬 History
+            </button>
+            <button className={`nav-tab ${activeTab === 'mncs' ? 'active' : ''}`}
+              onClick={() => setActiveTab('mncs')}>
+              🏢 Top MNCs
             </button>
             <button className={`nav-tab ${activeTab === 'feedback' ? 'active' : ''}`}
               onClick={() => setActiveTab('feedback')}>
@@ -1484,6 +1530,7 @@ export default function App() {
         {/* Tab Content */}
         {activeTab === 'profile' && <ProfileTab userId={userId} toast={showToast} />}
         {activeTab === 'logs' && <JobHistoryTab userId={userId} />}
+        {activeTab === 'mncs' && <TopMncTab />}
         {activeTab === 'feedback' && <FeedbackTab userId={userId} toast={showToast} />}
         {activeTab === 'admin' && isAdmin && <AdminTab toast={showToast} />}
 

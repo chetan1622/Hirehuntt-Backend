@@ -87,6 +87,7 @@ class ProfileUpdate(BaseModel):
     qualification: str
     searching_roles: List[str]
     experience: str
+    job_level: str = "Any Level"
     location: str
     receiver_email: str
     skills: str = ""
@@ -300,9 +301,10 @@ def get_profile(user_id: int, db: Session = Depends(get_db)):
         "qualification": profile.qualification or "",
         "searching_roles": roles,
         "experience": profile.experience or "",
-        "location": getattr(profile, "location", "India") or "India",
+        "location": profile.location or "India",
+        "job_level": profile.job_level or "Any Level",
+        "skills": profile.skills or "",
         "receiver_email": profile.receiver_email or "",
-        "skills": getattr(profile, "skills", "") or "",
         "plan_type": profile.plan_type,
         "payment_status": profile.payment_status,
         "trial_ends_at": profile.trial_ends_at.isoformat() if profile.trial_ends_at else None,
@@ -322,13 +324,9 @@ def update_profile(user_id: int, p_data: ProfileUpdate, db: Session = Depends(ge
     profile.searching_roles = json.dumps(p_data.searching_roles)
     profile.experience = p_data.experience
     profile.location = getattr(p_data, "location", "India")
+    profile.job_level = getattr(p_data, "job_level", "Any Level")
+    profile.skills = getattr(p_data, "skills", "")
     profile.receiver_email = p_data.receiver_email
-    
-    # Try setting skills dynamically to avoid crashing if DB migration failed temporarily
-    try:
-        profile.skills = p_data.skills
-    except AttributeError:
-        pass
     
     db.commit()
     return {"message": "Profile updated successfully"}
