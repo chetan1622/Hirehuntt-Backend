@@ -457,72 +457,72 @@ def run_job_hunt_pipeline(user_id: int):
             print(f"Skipping pipeline for user {user_id}: Profile or receiver email missing.")
             return
         
-    roles = []
-    if profile.searching_roles:
-        try:
-            roles = json.loads(profile.searching_roles)
-        except Exception:
-            roles = [r.strip() for r in profile.searching_roles.split(",") if r.strip()]
+        roles = []
+        if profile.searching_roles:
+            try:
+                roles = json.loads(profile.searching_roles)
+            except Exception:
+                roles = [r.strip() for r in profile.searching_roles.split(",") if r.strip()]
             
-    if not roles:
-        roles = ["Data Analyst"]
+        if not roles:
+            roles = ["Data Analyst"]
         
-    # Load resumes
-    matcher = ResumeMatcher(
-        ds_resume_path=profile.ds_resume_path,
-        da_resume_path=profile.da_resume_path
-    )
+        # Load resumes
+        matcher = ResumeMatcher(
+            ds_resume_path=profile.ds_resume_path,
+            da_resume_path=profile.da_resume_path
+        )
     
-    all_raw_jobs = []
-    seen_links = set()
-    locations = [getattr(profile, "location", "India") or "India"]
+        all_raw_jobs = []
+        seen_links = set()
+        locations = [getattr(profile, "location", "India") or "India"]
     
-    # Fetch job list
-    for role in roles:
-        for loc in locations:
-            # LinkedIn
-            linkedin_jobs = scrape_linkedin_jobs(role, loc, limit=50)
-            # Career Sites
-            career_jobs = scrape_career_sites(role, loc, limit=3)
+        # Fetch job list
+        for role in roles:
+            for loc in locations:
+                # LinkedIn
+                linkedin_jobs = scrape_linkedin_jobs(role, loc, limit=50)
+                # Career Sites
+                career_jobs = scrape_career_sites(role, loc, limit=3)
             
-            for job in linkedin_jobs + career_jobs:
-                if job['link'] not in seen_links:
-                    seen_links.add(job['link'])
-                    all_raw_jobs.append(job)
+                for job in linkedin_jobs + career_jobs:
+                    if job['link'] not in seen_links:
+                        seen_links.add(job['link'])
+                        all_raw_jobs.append(job)
                     
-    # Score and match
-    matched_jobs = []
-    matched_companies = []
-    threshold = 15 # Default threshold
+        # Score and match
+        matched_jobs = []
+        matched_companies = []
+        threshold = 15 # Default threshold
     
-    for job in all_raw_jobs:
-        # Match using the matcher
-        match_info = matcher.calculate_match(job['description'], allowed_roles=roles)
-        if match_info['score'] >= threshold:
-            job['match_info'] = match_info
-            matched_jobs.append(job)
-            if job['company'] != "N/A" and job['company'] not in matched_companies:
-                matched_companies.append(job['company'])
+        for job in all_raw_jobs:
+            # Match using the matcher
+            match_info = matcher.calculate_match(job['description'], allowed_roles=roles)
+            if match_info['score'] >= threshold:
+                job['match_info'] = match_info
+                matched_jobs.append(job)
+                if job['company'] != "N/A" and job['company'] not in matched_companies:
+                    matched_companies.append(job['company'])
                 
-    # Sort
-    matched_jobs.sort(key=lambda x: x['match_info']['score'], reverse=True)
+        # Sort
+        matched_jobs.sort(key=lambda x: x['match_info']['score'], reverse=True)
     
-    # Send Email
-    success = send_email_report(matched_jobs, profile.receiver_email)
+        # Send Email
+        success = send_email_report(matched_jobs, profile.receiver_email)
     
-    # Add Log Entry
-    companies_str = ", ".join(matched_companies[:8]) # Store first few matched companies
-    if len(matched_companies) > 8:
-        companies_str += f" (+{len(matched_companies) - 8} more)"
+        # Add Log Entry
+        companies_str = ", ".join(matched_companies[:8]) # Store first few matched companies
+        if len(matched_companies) > 8:
+            companies_str += f" (+{len(matched_companies) - 8} more)"
         
-    log_entry = Log(
-        user_id=user_id,
-        matched_count=len(matched_jobs),
-        companies=companies_str if matched_jobs else "No matched companies",
-        status="success" if success else "failed"
-    )
-    db.add(log_entry)
-    db.commit()
+        log_entry = Log(
+            user_id=user_id,
+            matched_count=len(matched_jobs),
+            companies=companies_str if matched_jobs else "No matched companies",
+            status="success" if success else "failed"
+        )
+        db.add(log_entry)
+        db.commit()
     finally:
         db.close()
 
