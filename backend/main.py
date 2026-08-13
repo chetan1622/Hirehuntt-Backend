@@ -523,6 +523,10 @@ def run_job_hunt_pipeline(user_id: int):
         )
         db.add(log_entry)
         db.commit()
+    except Exception as e:
+        error_msg = str(e)[:200]
+        db.add(Log(user_id=user_id, matched_count=0, companies="ERROR", status=f"failed: {error_msg}"))
+        db.commit()
     finally:
         db.close()
 
