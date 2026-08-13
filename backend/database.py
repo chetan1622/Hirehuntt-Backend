@@ -4,7 +4,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 
-DATABASE_URL = "sqlite:///./job_hunt.db"
+from backend import config
+
+if getattr(config, "DATA_DIR", None):
+    db_path = os.path.join(config.DATA_DIR, "job_hunt.db")
+    DATABASE_URL = f"sqlite:///{db_path}"
+else:
+    DATABASE_URL = "sqlite:///./job_hunt.db"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
