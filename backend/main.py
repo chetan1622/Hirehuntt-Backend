@@ -136,13 +136,11 @@ def send_otp_email(receiver_email, otp, is_registration=True):
             print("OTP sent successfully via Resend API.")
             return True
         else:
-            print(f"Error sending OTP via Resend: {response.text}")
-            print(f"CRITICAL: Since email failed, the OTP is: {otp}")
-            return True
+            print(f"Error sending OTP via Resend: {response.status_code} - {response.text}")
+            return False
     except Exception as e:
         print(f"Exception sending OTP via Resend: {e}")
-        print(f"CRITICAL: Since email failed, the OTP is: {otp}")
-        return True
+        return False
 
 @app.post("/api/register")
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
