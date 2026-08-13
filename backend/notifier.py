@@ -9,10 +9,9 @@ def send_email_report(matched_jobs, receiver_email, custom_sender_email=None, cu
     Allows passing dynamic sender credentials or falling back to environment variables.
     """
     sender_email = custom_sender_email or config.SENDER_EMAIL
-    sender_password = custom_sender_password or config.SENDER_PASSWORD
     
-    if not sender_email or not sender_password or not receiver_email:
-        print("Skipping Email Notification: SMTP Credentials or Receiver Email not provided.")
+    if not sender_email or not receiver_email:
+        print("Skipping Email Notification: Sender or Receiver Email not provided.")
         print(f"Total matched jobs computed: {len(matched_jobs)}")
         return False
 
