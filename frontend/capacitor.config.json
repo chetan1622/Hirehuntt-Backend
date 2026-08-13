@@ -1,0 +1,9 @@
+{
+  "appId": "com.hirehuntt.app",
+  "appName": "Hire Huntt",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  }
+}

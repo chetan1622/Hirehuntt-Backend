@@ -1,0 +1,90 @@
+import os
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, Text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
+from datetime import datetime
+
+DATABASE_URL = "sqlite:///./job_hunt.db"
+
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    password_hash = Column(String)
+    is_admin = Column(Integer, default=0)
+    last_active = Column(DateTime, nullable=True)  # Track last login for auto-delete
+    
+    profile = relationship("Profile", back_populates="user", uselist=False)
+    logs = relationship("Log", back_populates="user")
+    sent_jobs = relationship("SentJob", back_populates="user")
+    reviews = relationship("Review", back_populates="user")
+
+class Profile(Base):
+    __tablename__ = "profiles"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    name = Column(String, nullable=True)
+    qualification = Column(String, nullable=True)
+    searching_roles = Column(String, nullable=True) # Comma-separated roles (e.g. "Data Scientist, Data Analyst")
+    location = Column(String, default="India")
+    experience = Column(String, nullable=True)
+    receiver_email = Column(String, nullable=True)
+    ds_resume_path = Column(String, nullable=True)
+    da_resume_path = Column(String, nullable=True)
+    
+    plan_type = Column(String, default="trial")
+    trial_ends_at = Column(DateTime, nullable=True)
+    subscription_ends_at = Column(DateTime, nullable=True)
+    payment_status = Column(String, default="unpaid")
+    transaction_id = Column(String, nullable=True)
+    payment_screenshot = Column(String, nullable=True)
+    
+    user = relationship("User", back_populates="profile")
+
+class Log(Base):
+    __tablename__ = "logs"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    matched_count = Column(Integer, default=0)
+    companies = Column(String, nullable=True) # Comma-separated companies
+    status = Column(String) # "success" or "failed"
+    
+    user = relationship("User", back_populates="logs")
+
+class SentJob(Base):
+    """Tracks job links already sent to users to avoid duplicates."""
+    __tablename__ = "sent_jobs"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    job_link = Column(Text)
+    sent_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User", back_populates="sent_jobs")
+
+class Review(Base):
+    """User reviews/feedback. Admin approves before public display."""
+    __tablename__ = "reviews"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    username = Column(String)
+    review_text = Column(Text)
+    rating = Column(Integer, default=5)
+    is_approved = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User", back_populates="reviews")
+
+def init_db():
+    Base.metadata.create_all(bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
