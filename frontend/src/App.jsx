@@ -624,19 +624,20 @@ function JobHistoryTab({ userId }) {
 
                             {/* Action Buttons */}
                             <div style={{ display: 'flex', gap: 8, marginTop: '8px' }}>
-                              <a href={job.link} target="_blank" rel="noreferrer" style={{
+                              <button onClick={(e) => { e.stopPropagation(); window.open(job.link, '_system'); }} style={{
                                 flex: 1,
                                 background: 'var(--accent-indigo)',
                                 color: 'white',
                                 textAlign: 'center',
                                 padding: '8px 0',
                                 borderRadius: '6px',
-                                textDecoration: 'none',
+                                border: 'none',
                                 fontSize: '13px',
-                                fontWeight: '600'
+                                fontWeight: '600',
+                                cursor: 'pointer'
                               }}>
                                 Apply Now 🚀
-                              </a>
+                              </button>
                               <button style={{
                                 flex: 1,
                                 background: '#FFFBEB',
@@ -652,8 +653,13 @@ function JobHistoryTab({ userId }) {
                                 fetch(`${API}/saved-jobs/${userId}`, {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify(job)
-                                }).then(r => r.json()).then(data => alert(data.message)).catch(() => alert('Network error'))
+                                  body: JSON.stringify({
+                                    title: job.title || 'Unknown',
+                                    company: job.company || 'Unknown',
+                                    location: job.location || 'India',
+                                    link: job.link || '#'
+                                  })
+                                }).then(r => r.json()).then(data => alert(data.message || data.detail)).catch(() => alert('Network error'))
                               }}>
                                 ⭐ Save Job
                               </button>
