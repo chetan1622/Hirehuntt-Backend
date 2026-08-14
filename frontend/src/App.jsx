@@ -720,6 +720,135 @@ function TopMncTab() {
   )
 }
 
+// ATS Checker Tab
+function AtsCheckerTab({ toast }) {
+  const [resumeText, setResumeText] = useState('')
+  const [jdText, setJdText] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState(null)
+
+  const handleCheck = async () => {
+    if (!resumeText.trim() || !jdText.trim()) {
+      toast('Please paste both Resume and Job Description ❌')
+      return
+    }
+    setLoading(true)
+    setResult(null)
+    try {
+      const res = await fetch(`${API}/ats-check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resume_text: resumeText.trim(), jd_text: jdText.trim() })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setResult(data)
+      } else {
+        toast(data.detail || 'Failed to check ATS score ❌')
+      }
+    } catch {
+      toast('Network error ❌')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div style={{ padding: '0 0 20px 0' }}>
+      <div className="card">
+        <h3 style={{ marginTop: 0, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>🤖</span> AI ATS Checker
+        </h3>
+        <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 16 }}>
+          Paste your resume and the job description to get your match score, missing keywords, and project suggestions.
+        </p>
+
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Resume Content</label>
+        <textarea 
+          placeholder="Paste your full resume text here..." 
+          value={resumeText} 
+          onChange={e => setResumeText(e.target.value)}
+          style={{ width: '100%', height: 120, padding: 12, borderRadius: 8, border: '1px solid #D1D5DB', fontSize: 14, fontFamily: 'inherit', resize: 'vertical', marginBottom: 16 }}
+        />
+
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Job Description (JD)</label>
+        <textarea 
+          placeholder="Paste the job description here..." 
+          value={jdText} 
+          onChange={e => setJdText(e.target.value)}
+          style={{ width: '100%', height: 120, padding: 12, borderRadius: 8, border: '1px solid #D1D5DB', fontSize: 14, fontFamily: 'inherit', resize: 'vertical', marginBottom: 16 }}
+        />
+
+        <button 
+          onClick={handleCheck} 
+          disabled={loading}
+          style={{
+            width: '100%',
+            background: 'var(--accent-indigo)',
+            color: 'white',
+            padding: 14,
+            borderRadius: 8,
+            fontSize: 15,
+            fontWeight: 600,
+            border: 'none',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.7 : 1
+          }}>
+          {loading ? 'Analyzing with AI... ⏳' : 'Check ATS Score ✨'}
+        </button>
+      </div>
+
+      {result && (
+        <div className="card" style={{ marginTop: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+            {/* Score Circle */}
+            <div style={{
+              width: 80, height: 80, borderRadius: '50%', 
+              background: result.score >= 80 ? '#10B981' : result.score >= 50 ? '#F59E0B' : '#EF4444',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', fontSize: 24, fontWeight: 800,
+              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+            }}>
+              {result.score}%
+            </div>
+            <div>
+              <h4 style={{ margin: '0 0 4px', fontSize: 18, color: '#111827' }}>Match Score</h4>
+              <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>
+                {result.score >= 80 ? 'Excellent match! You are highly qualified.' : result.score >= 50 ? 'Good match, but room for improvement.' : 'Low match. Consider gaining more skills.'}
+              </p>
+            </div>
+          </div>
+
+          <h4 style={{ fontSize: 15, color: '#111827', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 6 }}><span>🔍</span> Missing Keywords</h4>
+          {result.missing_keywords && result.missing_keywords.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
+              {result.missing_keywords.map((kw, i) => (
+                <span key={i} style={{ background: '#FEE2E2', color: '#B91C1C', padding: '6px 12px', borderRadius: 20, fontSize: 13, fontWeight: 500 }}>
+                  {kw}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p style={{ fontSize: 14, color: '#10B981', marginBottom: 24 }}>No missing keywords! Your resume covers all required skills.</p>
+          )}
+
+          <h4 style={{ fontSize: 15, color: '#111827', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 6 }}><span>💡</span> Role-Based Project Suggestions</h4>
+          {result.project_suggestions && result.project_suggestions.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {result.project_suggestions.map((proj, i) => (
+                <div key={i} style={{ background: '#F3F4F6', padding: 12, borderRadius: 8, borderLeft: '4px solid var(--accent-indigo)' }}>
+                  <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: '1.5' }}>{proj}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ fontSize: 14, color: '#6B7280' }}>No project suggestions at this time.</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Feedback Tab
 function FeedbackTab({ userId, toast }) {
   const [reviewText, setReviewText] = useState('')
@@ -1554,6 +1683,10 @@ export default function App() {
               onClick={() => setActiveTab('prep')}>
               🎯 Prep Kit
             </button>
+            <button className={`nav-tab ${activeTab === 'ats' ? 'active' : ''}`}
+              onClick={() => setActiveTab('ats')}>
+              📄 ATS Check
+            </button>
             <button className={`nav-tab ${activeTab === 'mncs' ? 'active' : ''}`}
               onClick={() => setActiveTab('mncs')}>
               🏢 MNCs
@@ -1576,6 +1709,7 @@ export default function App() {
         {activeTab === 'logs' && <JobHistoryTab userId={userId} />}
         {activeTab === 'saved' && <SavedJobsTab userId={userId} />}
         {activeTab === 'prep' && <InterviewPrepTab />}
+        {activeTab === 'ats' && <AtsCheckerTab toast={showToast} />}
         {activeTab === 'mncs' && <TopMncTab />}
         {activeTab === 'feedback' && <FeedbackTab userId={userId} toast={showToast} />}
         {activeTab === 'admin' && isAdmin && <AdminTab toast={showToast} />}

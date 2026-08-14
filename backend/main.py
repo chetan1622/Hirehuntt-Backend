@@ -1,5 +1,6 @@
 import os
-import shutil
+import httpx
+import google.generativeai as genai
 import json
 import smtplib
 import random
@@ -131,6 +132,9 @@ class ReviewSubmit(BaseModel):
 class ChoosePlan(BaseModel):
     plan: str  # 'trial' or 'premium'
 
+class AtsCheckRequest(BaseModel):
+    resume_text: str
+    jd_text: str
 
 # Auth endpoints
 
@@ -671,6 +675,47 @@ def trigger_matching(user_id: int, background_tasks: BackgroundTasks, db: Sessio
 # ============================================================
 # REVIEW / FEEDBACK ENDPOINTS
 # ============================================================
+
+@app.post("/api/ats-check")
+def ats_check(request: AtsCheckRequest):
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Gemini API Key is not configured. Please add GEMINI_API_KEY to your environment variables.")
+    
+    genai.configure(api_key=api_key)
+    
+    prompt = f"""
+    You are an expert ATS (Applicant Tracking System).
+    Review this Job Description and this Resume.
+    Return ONLY a raw JSON object with no markdown formatting or backticks.
+    
+    Format:
+    {{
+        "score": <integer from 0 to 100 representing the match percentage>,
+        "missing_keywords": [<list of important skills/keywords from the JD missing in the resume>],
+        "project_suggestions": [<list of 2-3 specific project ideas the candidate could build to gain the missing skills for this role>]
+    }}
+    
+    Job Description:
+    {request.jd_text}
+    
+    Resume:
+    {request.resume_text}
+    """
+    
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        if text.startswith("```json"):
+            text = text[7:-3]
+        elif text.startswith("```"):
+            text = text[3:-3]
+        data = json.loads(text.strip())
+        return data
+    except Exception as e:
+        print(f"Error calling Gemini: {e}")
+        raise HTTPException(status_code=500, detail="Failed to analyze resume with AI.")
 
 @app.post("/api/review/{user_id}")
 def submit_review(user_id: int, data: ReviewSubmit, db: Session = Depends(get_db)):
