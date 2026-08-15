@@ -1609,7 +1609,7 @@ export default function App() {
         const loginTime = new Date(session.loginTime)
         const now = new Date()
         const hoursDiff = (now - loginTime) / (1000 * 60 * 60)
-        if (hoursDiff < 48) {
+        if (hoursDiff < 8760) { // Keep logged in for 1 year instead of 48 hours
           setUserId(session.userId)
           setUsername(session.username)
           setIsAdmin(session.isAdmin)
