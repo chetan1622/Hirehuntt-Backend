@@ -1,4 +1,5 @@
 import os
+import shutil
 import httpx
 import google.generativeai as genai
 import json
