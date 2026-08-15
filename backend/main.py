@@ -677,6 +677,22 @@ def trigger_matching(user_id: int, background_tasks: BackgroundTasks, db: Sessio
 # REVIEW / FEEDBACK ENDPOINTS
 # ============================================================
 
+from pypdf import PdfReader
+import io
+
+@app.post("/api/parse-pdf")
+async def parse_pdf(file: UploadFile = File(...)):
+    try:
+        content = await file.read()
+        reader = PdfReader(io.BytesIO(content))
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or ""
+        return {"text": text}
+    except Exception as e:
+        print(f"Error parsing PDF: {e}")
+        raise HTTPException(status_code=400, detail="Failed to parse PDF file.")
+
 @app.post("/api/ats-check")
 def ats_check(request: AtsCheckRequest):
     api_key = os.getenv("GEMINI_API_KEY")

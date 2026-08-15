@@ -813,11 +813,43 @@ function AtsCheckerTab({ toast }) {
   const [resumeText, setResumeText] = useState('')
   const [jdText, setJdText] = useState('')
   const [loading, setLoading] = useState(false)
+  const [parsing, setParsing] = useState(false)
   const [result, setResult] = useState(null)
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (file.type !== 'application/pdf') {
+      toast('Please upload a PDF file ❌')
+      return
+    }
+
+    setParsing(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch(`${API}/parse-pdf`, {
+        method: 'POST',
+        body: formData
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setResumeText(data.text)
+        toast('Resume extracted successfully! ✅')
+      } else {
+        toast('Failed to extract text from PDF ❌')
+      }
+    } catch {
+      toast('Network error during upload ❌')
+    }
+    setParsing(false)
+    e.target.value = null // reset file input
+  }
 
   const handleCheck = async () => {
     if (!resumeText.trim() || !jdText.trim()) {
-      toast('Please paste both Resume and Job Description ❌')
+      toast('Please paste/upload both Resume and Job Description ❌')
       return
     }
     setLoading(true)
@@ -847,10 +879,21 @@ function AtsCheckerTab({ toast }) {
           <span>🤖</span> AI ATS Checker
         </h3>
         <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 16 }}>
-          Paste your resume and the job description to get your match score, missing keywords, and project suggestions.
+          Upload your resume PDF or paste the text, along with the job description to get your match score.
         </p>
 
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Resume Content</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Resume Content</label>
+          <div>
+            <input type="file" accept="application/pdf" id="resume-upload" style={{ display: 'none' }} onChange={handleFileUpload} />
+            <label htmlFor="resume-upload" style={{ 
+              background: '#E0E7FF', color: '#4338CA', padding: '4px 10px', borderRadius: 4, 
+              fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'inline-block' 
+            }}>
+              {parsing ? 'Extracting... ⏳' : '📄 Upload PDF'}
+            </label>
+          </div>
+        </div>
         <textarea 
           placeholder="Paste your full resume text here..." 
           value={resumeText} 
