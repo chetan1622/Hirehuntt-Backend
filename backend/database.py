@@ -3,14 +3,24 @@ from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, F
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime
 
-# Railway Volume Support
-VOLUME_PATH = os.getenv("RAILWAY_VOLUME_MOUNT_PATH", ".")
-db_path = os.path.join(VOLUME_PATH, "job_hunt.db")
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{db_path}"
+# Persistent DB Support
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+if DATABASE_URL:
+    # SQLAlchemy 1.4+ requires postgresql:// instead of postgres://
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    SQLALCHEMY_DATABASE_URL = DATABASE_URL
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+else:
+    # Railway Volume Support
+    VOLUME_PATH = os.getenv("RAILWAY_VOLUME_MOUNT_PATH", ".")
+    db_path = os.path.join(VOLUME_PATH, "job_hunt.db")
+    SQLALCHEMY_DATABASE_URL = f"sqlite:///{db_path}"
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
