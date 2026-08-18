@@ -1789,7 +1789,14 @@ export default function App() {
             )}
             <img src="/h_logo.jpg" alt="Logo" style={{height: 24, borderRadius: 4}}/> Hire Huntt
           </div>
-          <div className="user-badge">
+          <div className="user-badge" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button 
+                onClick={() => setDarkMode(!darkMode)} 
+                style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer' }}
+                title="Toggle Theme"
+              >
+                {darkMode ? '☀️' : '🌙'}
+            </button>
             <div className="user-avatar">{username.charAt(0).toUpperCase()}</div>
             <span>{username}</span>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>

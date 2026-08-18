@@ -29,6 +29,20 @@
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+:root.light-mode {
+  --bg-dark: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-glass: rgba(0, 0, 0, 0.05);
+  --bg-glass-hover: rgba(0, 0, 0, 0.08);
+  --border-glass: rgba(0, 0, 0, 0.1);
+  --border-glass-active: rgba(99, 102, 241, 0.8);
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --shadow-glow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+
 *, *::before, *::after {
   margin: 0;
   padding: 0;
@@ -52,6 +66,7 @@ body {
   margin: 0 auto;
   padding: 24px 16px;
   min-height: 100vh;
+  padding-bottom: 90px;
 }
 
 /* ============== Auth Page ============== */
@@ -374,30 +389,49 @@ body {
 }
 
 /* ============== Navigation Tabs ============== */
+
 .nav-tabs {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   display: flex;
+  justify-content: flex-start;
   gap: 4px;
-  background: var(--bg-glass);
-  border-radius: var(--radius-md);
-  padding: 4px;
-  margin-bottom: 24px;
-  border: 1px solid var(--border-glass);
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-glass);
+  padding: 10px 8px 24px 8px; /* Extra padding for some phones */
+  z-index: 1000;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
+
+
 .nav-tab {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: var(--radius-sm);
   background: transparent;
+  border: none;
   color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--font-body);
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: var(--transition);
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 70px;
 }
+.nav-tab.active {
+  color: var(--accent-indigo);
+  background: var(--bg-glass);
+}
+
 
 .nav-tab.active {
   background: var(--accent-indigo);
@@ -610,7 +644,8 @@ body {
 @media (min-width: 768px) {
   .app-container {
     max-width: 480px;
-  }
+    padding-bottom: 90px;
+}
 }
 
 /* ============== Admin Panel ============== */
@@ -1058,3 +1093,4 @@ body {
   color: var(--text-primary);
 }
 
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
