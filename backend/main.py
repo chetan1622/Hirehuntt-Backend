@@ -581,9 +581,9 @@ def run_job_hunt_pipeline(user_id: int):
         for role in roles:
             for loc in locations:
                 # LinkedIn
-                linkedin_jobs = scrape_linkedin_jobs(role, loc, limit=50)
+                linkedin_jobs = scrape_linkedin_jobs(role, loc, experience=profile.experience, limit=50)
                 # Career Sites
-                career_jobs = scrape_career_sites(role, loc, limit=3)
+                career_jobs = scrape_career_sites(role, loc, experience=profile.experience, limit=10)
             
                 for job in linkedin_jobs + career_jobs:
                     if job['link'] not in seen_links:
@@ -721,7 +721,7 @@ def ats_check(request: AtsCheckRequest):
     """
     
     try:
-        model = genai.GenerativeModel('gemini-flash-latest')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(prompt)
         text = response.text.strip()
         if text.startswith("```json"):
@@ -919,8 +919,11 @@ def daily_job_email_all_users():
                 
                 for role in roles:
                     for loc in locations:
-                        linkedin_jobs = scrape_linkedin_jobs(role, loc, limit=50)
-                        career_jobs = scrape_career_sites(role, loc, limit=3)
+                        # LinkedIn
+                        linkedin_jobs = scrape_linkedin_jobs(role, loc, experience=profile.experience, limit=50)
+                        # Career Sites
+                        career_jobs = scrape_career_sites(role, loc, experience=profile.experience, limit=5)
+                    
                         for job in linkedin_jobs + career_jobs:
                             if job['link'] not in seen_links and job['link'] not in already_sent:
                                 seen_links.add(job['link'])

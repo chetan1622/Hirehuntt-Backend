@@ -8,14 +8,26 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
-def scrape_linkedin_jobs(keywords, location, limit=10):
+def scrape_linkedin_jobs(keywords, location, experience=None, limit=10):
     jobs = []
     encoded_keywords = urllib.parse.quote(keywords)
     encoded_location = urllib.parse.quote(location)
     
+    exp_filter = ""
+    if experience:
+        exp_str = str(experience).lower()
+        if "fresher" in exp_str or "0" in exp_str or "entry" in exp_str or "intern" in exp_str:
+            exp_filter = "&f_E=1,2"
+        elif "1" in exp_str or "2" in exp_str or "3" in exp_str:
+            exp_filter = "&f_E=2,3,4"
+        elif "4" in exp_str or "5" in exp_str or "6" in exp_str or "7" in exp_str:
+            exp_filter = "&f_E=3,4"
+        else:
+            exp_filter = "&f_E=4,5,6"
+            
     for start in range(0, limit, 25):
         # f_TPR=r86400 filters jobs posted in the past 24 hours
-        url = f"https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords={encoded_keywords}&location={encoded_location}&f_TPR=r86400&start={start}"
+        url = f"https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords={encoded_keywords}&location={encoded_location}&f_TPR=r86400{exp_filter}&start={start}"
         
         try:
             print(f"Fetching LinkedIn jobs from: {url}")

@@ -26,11 +26,17 @@ def decode_bing_url(url):
         pass
     return url
 
-def scrape_career_sites(keywords, location, limit=5):
+def scrape_career_sites(keywords, location, experience=None, limit=5):
     jobs = []
+    # Incorporate experience into keywords if available
+    exp_keyword = f" {experience}" if experience and experience != "Any Level" else ""
+    search_term = f"{keywords}{exp_keyword}"
+    
     queries = [
-        f'site:greenhouse.io "{keywords}" "{location}"',
-        f'site:lever.co "{keywords}" "{location}"'
+        f'site:greenhouse.io "{search_term}" "{location}"',
+        f'site:lever.co "{search_term}" "{location}"',
+        f'site:glassdoor.co.in/job-listing "{search_term}" "{location}"',
+        f'site:glassdoor.com/job-listing "{search_term}" "{location}"'
     ]
     
     for query in queries:
@@ -57,7 +63,7 @@ def scrape_career_sites(keywords, location, limit=5):
                 
                 link = decode_bing_url(raw_link)
                 
-                if "greenhouse.io" not in link and "lever.co" not in link:
+                if not any(domain in link for domain in ["greenhouse.io", "lever.co", "glassdoor.co.in", "glassdoor.com"]):
                     continue
                 
                 title = link_elem.text.strip()
@@ -73,6 +79,11 @@ def scrape_career_sites(keywords, location, limit=5):
                     match = re.search(r'greenhouse\.io/([^/]+)', link)
                     if match:
                         company = match.group(1).replace("-", " ").title()
+                elif "glassdoor" in link:
+                    # e.g., glassdoor.co.in/job-listing/data-scientist-somecompany-JV_IC...
+                    company_match = re.search(r'-([^-]+)-JV_IC', link)
+                    if company_match:
+                        company = company_match.group(1).replace("-", " ").title()
                 
                 snippet_elem = result.find("div", class_="b_caption")
                 snippet = snippet_elem.text.strip() if snippet_elem else ""
@@ -83,7 +94,7 @@ def scrape_career_sites(keywords, location, limit=5):
                 
                 jobs.append({
                     "id": link,
-                    "source": "Greenhouse/Lever",
+                    "source": "Glassdoor" if "glassdoor" in link else "Greenhouse/Lever",
                     "title": title,
                     "company": company,
                     "location": location,
