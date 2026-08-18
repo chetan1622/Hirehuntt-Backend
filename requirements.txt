@@ -54,3 +54,4 @@ watchfiles==1.2.0
 websockets==17.0.1
 google-generativeai
 psycopg2-binary==2.9.9
+firebase-admin==6.5.0

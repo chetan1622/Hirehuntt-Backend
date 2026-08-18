@@ -30,12 +30,12 @@
 }
 
 :root.light-mode {
-  --bg-dark: #f1f5f9;
-  --bg-card: rgba(255, 255, 255, 0.95);
-  --bg-glass: rgba(0, 0, 0, 0.05);
-  --bg-glass-hover: rgba(0, 0, 0, 0.08);
-  --border-glass: rgba(0, 0, 0, 0.1);
-  --border-glass-active: rgba(99, 102, 241, 0.8);
+  --bg-dark: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-glass: #f1f5f9;
+  --bg-glass-hover: #e2e8f0;
+  --border-glass: #e2e8f0;
+  --border-glass-active: #6366f1;
   --text-primary: #0f172a;
   --text-secondary: #334155;
   --text-muted: #64748b;

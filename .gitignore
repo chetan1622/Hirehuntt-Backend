@@ -6,3 +6,4 @@ __pycache__/
 frontend/dist/
 frontend/android/
 resumes/
+backend/firebase-adminsdk.json
