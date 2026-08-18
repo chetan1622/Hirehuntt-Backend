@@ -625,7 +625,8 @@ function JobHistoryTab({ userId }) {
 
                             {/* Action Buttons */}
                             <div style={{ display: 'flex', gap: 8, marginTop: '8px' }}>
-                              <button onClick={(e) => { e.stopPropagation(); window.open(job.link, '_system'); }} style={{
+                              <button onClick={(e) => { e.stopPropagation(); shareJob(job.title || job.company, job.link); }} style={{ background: "none", border: "1px solid var(--border-glass)", padding: "6px 12px", borderRadius: 8, cursor: "pointer", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6, marginRight: 8 }} title="Share">🔗</button>
+<button onClick={(e) => { e.stopPropagation(); openLink(job.link); }} style={{
                                 flex: 1,
                                 background: 'var(--accent-indigo)',
                                 color: 'white',
@@ -724,7 +725,8 @@ function SavedJobsTab({ userId }) {
             <span>📍</span> {job.location}
           </p>
           <div style={{ marginTop: 'auto', display: 'flex', gap: 8 }}>
-            <button onClick={() => window.open(job.link, '_system')} style={{
+            <button onClick={(e) => { e.stopPropagation(); shareJob(job.title || job.company, job.link); }} style={{ background: "none", border: "1px solid var(--border-glass)", padding: "6px 12px", borderRadius: 8, cursor: "pointer", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6, marginRight: 8 }} title="Share">🔗</button>
+<button onClick={() => openLink(job.link)} style={{
               flex: 1, background: 'var(--accent-indigo)', color: 'white', padding: '8px 0', borderRadius: 6, border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer'
             }}>Apply</button>
             <button onClick={() => handleDelete(job.id)} style={{
