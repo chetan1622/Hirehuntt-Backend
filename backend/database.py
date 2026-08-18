@@ -30,6 +30,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     password_hash = Column(String)
     is_admin = Column(Integer, default=0)
+    fcm_token = Column(String, nullable=True)
     last_active = Column(DateTime, nullable=True)  # Track last login for auto-delete
     
     profile = relationship("Profile", back_populates="user", uselist=False)

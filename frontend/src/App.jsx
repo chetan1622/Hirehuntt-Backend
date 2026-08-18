@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { PushNotifications } from '@capacitor/push-notifications'
 import { ALL_ROLES } from './roles'
 import { TOP_MNCS } from './mncs'
 import { INTERVIEW_DATA, GENERAL_INTERVIEW_DATA } from './interview_data'

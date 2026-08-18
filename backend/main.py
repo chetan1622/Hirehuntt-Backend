@@ -11,7 +11,10 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Bac
 
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
+import firebase_admin
+from firebase_admin import credentials, messaging
+, EmailStr
 from typing import List, Optional
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -982,3 +985,36 @@ def daily_job_email_all_users():
         print(f"[Scheduler] Daily email error: {e}")
     finally:
         db.close()
+
+
+
+try:
+    if not firebase_admin._apps:
+        cred = credentials.Certificate('firebase-adminsdk.json')
+        firebase_admin.initialize_app(cred)
+except Exception as e:
+    print('Firebase init error:', e)
+
+class DeviceToken(BaseModel):
+    user_id: int
+    fcm_token: str
+
+@app.post('/api/register-device')
+def register_device(data: DeviceToken, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == data.user_id).first()
+    if user:
+        user.fcm_token = data.fcm_token
+        db.commit()
+        return {'status': 'success'}
+    raise HTTPException(status_code=404, detail='User not found')
+
+def send_push_notification(token: str, title: str, body: str):
+    if not token: return
+    try:
+        message = messaging.Message(
+            notification=messaging.Notification(title=title, body=body),
+            token=token,
+        )
+        messaging.send(message)
+    except Exception as e:
+        print('Push notification failed:', e)
