@@ -11,10 +11,9 @@ from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, Bac
 
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 import firebase_admin
 from firebase_admin import credentials, messaging
-, EmailStr
 from typing import List, Optional
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler

@@ -123,6 +123,13 @@ class SavedJob(Base):
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    try:
+        from sqlalchemy import text
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN fcm_token VARCHAR;"))
+    except Exception as e:
+        pass
+
     db = SessionLocal()
     try:
         admin_user = db.query(User).filter(User.username == "admin1622").first()
