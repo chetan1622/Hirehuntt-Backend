@@ -736,6 +736,39 @@ function JobHistoryTab({ userId }) {
 }
 
 // Saved Jobs Tab
+
+function LearningTab() {
+  const [shorts, setShorts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(`${API}/shorts`).then(r => r.json()).then(data => {
+      setShorts(data)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
+
+  if (loading) return <div style={{ textAlign: 'center', padding: 40 }}><span className="spinner"></span></div>
+
+  return (
+    <div className="learning-tab" style={{ padding: 0, margin: '-24px -16px', height: '100vh', overflowY: 'scroll', scrollSnapType: 'y mandatory' }}>
+      {shorts.map((video, i) => (
+        <div key={i} style={{ height: '100vh', width: '100%', scrollSnapAlign: 'start', position: 'relative' }}>
+          <iframe 
+            src={`https://www.youtube.com/embed/${video.id}?autoplay=0&loop=1&playsinline=1`}
+            style={{ width: '100%', height: '100%', border: 'none' }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+          <div style={{ position: 'absolute', bottom: 120, left: 16, color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+            <h3 style={{ margin: 0, fontSize: 18 }}>{video.author}</h3>
+            <p style={{ margin: '4px 0 0', fontSize: 14 }}>{video.title}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 function SavedJobsTab({ userId }) {
   const [savedJobs, setSavedJobs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1655,6 +1688,15 @@ export default function App() {
   const [footerModal, setFooterModal] = useState(null) // null, 'about', 'contact', 'terms'
   const [darkMode, setDarkMode] = useState(false)
 
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.remove('light-mode')
+    } else {
+      document.documentElement.classList.add('light-mode')
+    }
+  }, [darkMode])
+
+
   // On app load: check localStorage for saved session (48hr window)
   useEffect(() => {
     const savedTerms = localStorage.getItem('jh_terms_accepted')
@@ -1726,7 +1768,7 @@ export default function App() {
     if (is_admin) {
       setActiveTab('admin')
     } else {
-      setActiveTab('profile')
+      setActiveTab('jobs')
     }
 
     localStorage.setItem('jh_session', JSON.stringify({
@@ -1746,7 +1788,7 @@ export default function App() {
     setPaymentStatus('unpaid')
     setPlanType('unpaid')
     setSubStatus(null)
-    setActiveTab('profile')
+    setActiveTab('jobs')
     setCurrentScreen('auto')
     localStorage.removeItem('jh_session')
   }
@@ -1838,7 +1880,7 @@ export default function App() {
           <div className="logo-sm" style={{display:"flex", alignItems:"center", gap: 8}}>
             {activeTab !== 'profile' && !isAdmin && (
               <button 
-                onClick={() => setActiveTab('profile')} 
+                onClick={() => setActiveTab('jobs')} 
                 style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', padding: '0 8px', marginRight: 4, display: 'flex', alignItems: 'center' }}
                 title="Go Back"
               >
@@ -1872,46 +1914,28 @@ export default function App() {
         )}
 
         {/* Navigation Tabs */}
-        {!isAdmin ? (
-          <div className="nav-tabs" style={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: '4px' }}>
-            <button className={`nav-tab ${activeTab === 'profile' ? 'active' : ''}`}
-              onClick={() => setActiveTab('profile')}>
-              ⚙️ Profile
-            </button>
-            <button className={`nav-tab ${activeTab === 'logs' ? 'active' : ''}`}
-              onClick={() => setActiveTab('logs')}>
-              📬 History
-            </button>
-            <button className={`nav-tab ${activeTab === 'saved' ? 'active' : ''}`}
-              onClick={() => setActiveTab('saved')}>
-              ⭐ Saved
-            </button>
-            <button className={`nav-tab ${activeTab === 'prep' ? 'active' : ''}`}
-              onClick={() => setActiveTab('prep')}>
-              🎯 Prep Kit
-            </button>
-            <button className={`nav-tab ${activeTab === 'ats' ? 'active' : ''}`}
-              onClick={() => setActiveTab('ats')}>
-              📄 ATS Check
-            </button>
-            <button className={`nav-tab ${activeTab === 'mncs' ? 'active' : ''}`}
-              onClick={() => setActiveTab('mncs')}>
-              🏢 MNCs
-            </button>
-            <button className={`nav-tab ${activeTab === 'feedback' ? 'active' : ''}`}
-              onClick={() => setActiveTab('feedback')}>
-              💬 Feedback
-            </button>
-          </div>
-        ) : (
-          <div className="nav-tabs">
-            <button className="nav-tab active" style={{ cursor: 'default' }}>
-              🛡️ Admin Dashboard
-            </button>
-          </div>
-        )}
-
-        {/* Tab Content */}
+              {!isAdmin ? (
+                <div className="nav-tabs">
+                  <div className={`nav-tab ${activeTab === 'logs' ? 'active' : ''}`} onClick={() => setActiveTab('logs')}>
+                    <span className="icon">💼</span>
+                    Jobs
+                  </div>
+                  <div className={`nav-tab ${activeTab === 'saved' ? 'active' : ''}`} onClick={() => setActiveTab('saved')}>
+                    <span className="icon">⭐</span>
+                    Saved
+                  </div>
+                  <div className={`nav-tab ${activeTab === 'learning' ? 'active' : ''}`} onClick={() => setActiveTab('learning')}>
+                    <span className="icon">📚</span>
+                    Learn
+                  </div>
+                  <div className={`nav-tab ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
+                    <span className="icon">👤</span>
+                    Profile
+                  </div>
+                </div>
+              ) : null}
+              
+              {/* Tab Content */}
         {activeTab === 'profile' && <ProfileTab userId={userId} toast={showToast} onExpired={() => setCurrentScreen('payment')} />}
         {activeTab === 'logs' && <JobHistoryTab userId={userId} />}
         {activeTab === 'saved' && <SavedJobsTab userId={userId} />}

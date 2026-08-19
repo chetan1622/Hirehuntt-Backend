@@ -1056,6 +1056,7 @@ def get_shorts():
                     "published": pub_date
                 })
         except Exception as e:
+            all_videos.append({'id': 'dQw4w9WgXcQ', 'title': f'Error: {e}', 'author': 'System', 'published': '2026-08-19T00:00:00Z'})
             continue
 
     # Sort by published date descending
