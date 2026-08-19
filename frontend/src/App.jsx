@@ -1653,6 +1653,7 @@ export default function App() {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [currentScreen, setCurrentScreen] = useState('auto') // auto, plan_choice, payment
   const [footerModal, setFooterModal] = useState(null) // null, 'about', 'contact', 'terms'
+  const [darkMode, setDarkMode] = useState(false)
 
   // On app load: check localStorage for saved session (48hr window)
   useEffect(() => {
