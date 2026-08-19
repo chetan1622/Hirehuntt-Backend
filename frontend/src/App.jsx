@@ -1,8 +1,62 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { PushNotifications } from '@capacitor/push-notifications'
+import { Browser } from '@capacitor/browser'
+import { Share } from '@capacitor/share'
+
 import { ALL_ROLES } from './roles'
 import { TOP_MNCS } from './mncs'
 import { INTERVIEW_DATA, GENERAL_INTERVIEW_DATA } from './interview_data'
+
+
+const openLink = async (url) => {
+  if (!url) return;
+  try {
+    await Browser.open({ url });
+  } catch (e) {
+    window.open(url, '_blank');
+  }
+};
+
+const shareJob = async (jobTitle, url) => {
+  if (!url) return;
+  try {
+    await Share.share({
+      title: jobTitle,
+      text: 'Check out this job I found on Hire Huntt: ' + jobTitle,
+      url: url,
+      dialogTitle: 'Share Job',
+    });
+  } catch (e) {
+    console.log('Error sharing', e);
+  }
+};
+
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error('ErrorBoundary caught:', error, errorInfo);
+    this.setState({ errorInfo });
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 20, color: 'red', wordBreak: 'break-all' }}>
+          <h2>App Crashed!</h2>
+          <p>{this.state.error && this.state.error.toString()}</p>
+          <pre style={{ fontSize: 10 }}>{this.state.errorInfo && this.state.errorInfo.componentStack}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const API = "https://api.hirehuntt.in/api"
 
@@ -1800,7 +1854,7 @@ export default function App() {
               >
                 {darkMode ? '☀️' : '🌙'}
             </button>
-            <div className="user-avatar">{username.charAt(0).toUpperCase()}</div>
+            <div className="user-avatar">{(username ? username.charAt(0).toUpperCase() : '?')}</div>
             <span>{username}</span>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
@@ -1874,6 +1928,8 @@ export default function App() {
 
   return (
     <div className="app-container">
+      <ErrorBoundary>
+
       {content}
 
       {/* Footer Links */}
@@ -1884,6 +1940,7 @@ export default function App() {
         <span>•</span>
         <button onClick={() => setFooterModal('terms')}>Terms & Conditions</button>
       </footer>
+      </ErrorBoundary>
 
       {/* Footer Modals */}
       {footerModal && (
