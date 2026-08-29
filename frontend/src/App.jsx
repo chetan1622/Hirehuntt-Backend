@@ -795,9 +795,9 @@ function ReelsTab() {
       {shorts.map((video, i) => (
         <div key={i} style={{ height: '100vh', width: '100%', scrollSnapAlign: 'start', position: 'relative' }}>
           <iframe 
-            src={`https://www.youtube.com/embed/${video.id}?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&playsinline=1&loop=1&playlist=${video.id}&origin=${window.location.origin}`}
+            src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&mute=1&controls=1&playsinline=1&rel=0`}
             style={{ width: '100%', height: '100%', border: 'none' }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
           ></iframe>
           <div style={{ position: 'absolute', bottom: 120, left: 16, right: 16, color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)', zIndex: 20 }}>
