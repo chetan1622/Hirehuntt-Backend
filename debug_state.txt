@@ -1,0 +1,20 @@
+
+// Main App
+export default function App() {
+  const [userId, setUserId] = useState(null)
+  const [username, setUsername] = useState('')
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [paymentStatus, setPaymentStatus] = useState('unpaid')
+  const [planType, setPlanType] = useState('unpaid')
+  const [subStatus, setSubStatus] = useState(null) // subscription status from API
+  const [activeTab, setActiveTab] = useState('profile')
+  const [toastMsg, setToastMsg] = useState('')
+  const [toastVisible, setToastVisible] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [currentScreen, setCurrentScreen] = useState('auto') // auto, plan_choice, payment
+  const [footerModal, setFooterModal] = useState(null) // null, 'about', 'contact', 'terms'
+
+  // On app load: check localStorage for saved session (48hr window)
+  useEffect(() => {
+    const savedTerms = localStorage.getItem('jh_terms_accepted')
+    if (savedTerms === 'true') setTermsAccepted(true)

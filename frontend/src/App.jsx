@@ -794,15 +794,9 @@ function ReelsTab() {
     <div className="reels-tab" style={{ padding: 0, margin: '-24px -16px', height: '100vh', overflowY: 'scroll', scrollSnapType: 'y mandatory', backgroundColor: 'black' }}>
       {shorts.map((video, i) => (
         <div key={i} style={{ height: '100vh', width: '100%', scrollSnapAlign: 'start', position: 'relative' }}>
-          {/* Transparent Overlay to prevent clicking and redirecting to YouTube */}
-          <div style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10}} 
-               onClick={(e) => {
-                 // We can implement play/pause here if we use YouTube API, but for now it just blocks clicks.
-               }}>
-          </div>
           <iframe 
-            src={`https://www.youtube.com/embed/${video.id}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&loop=1&playlist=${video.id}`}
-            style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }}
+            src={`https://www.youtube.com/embed/${video.id}?autoplay=1&mute=1&controls=1&modestbranding=1&rel=0&playsinline=1&loop=1&playlist=${video.id}&origin=${window.location.origin}`}
+            style={{ width: '100%', height: '100%', border: 'none' }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           ></iframe>

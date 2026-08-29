@@ -1,0 +1,34 @@
+function ProfileTab({ userId, toast, onExpired }) {
+  const [name, setName] = useState('')
+  const [qualification, setQualification] = useState('')
+  const [roles, setRoles] = useState([])
+  const [roleInput, setRoleInput] = useState('')
+  const [skills, setSkills] = useState('')
+  const [experience, setExperience] = useState('')
+  const [jobLevel, setJobLevel] = useState('Any Level')
+  const [location, setLocation] = useState('India')
+  const [receiverEmail, setReceiverEmail] = useState('')
+  const [dsUploaded, setDsUploaded] = useState(false)
+  const [daUploaded, setDaUploaded] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [running, setRunning] = useState(false)
+
+  const dsRef = useRef(null)
+  const daRef = useRef(null)
+
+  useEffect(() => {
+    fetch(`${API}/profile/${userId}`).then(r => r.json()).then(data => {
+      setName(data.name || '')
+      setQualification(data.qualification || '')
+      setRoles(data.searching_roles || [])
+      setSkills(data.skills || '')
+      setExperience(data.experience || '')
+      setJobLevel(data.job_level || 'Any Level')
+      setLocation(data.location || 'India')
+      setReceiverEmail(data.receiver_email || '')
+      setDsUploaded(data.ds_resume_uploaded)
+      setDaUploaded(data.da_resume_uploaded)
+    }).catch(() => {})
+  }, [userId])
+
+  const toggleRole = (role) => {

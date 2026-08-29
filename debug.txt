@@ -1,0 +1,4 @@
+Line 628: <button onClick={(e) => { e.stopPropagation(); shareJob(job.title || job.company, job.link); }} style={{ background: "none", border: "1px solid var(--border-glass)", padding: "6px 12px", borderRadius: 8, cursor: "pointer", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6, marginRight: 8 }} title="Share">🔗</button>
+Line 629: <button onClick={(e) => { e.stopPropagation(); openLink(job.link); }} style={{
+Line 728: <button onClick={(e) => { e.stopPropagation(); shareJob(job.title || job.company, job.link); }} style={{ background: "none", border: "1px solid var(--border-glass)", padding: "6px 12px", borderRadius: 8, cursor: "pointer", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6, marginRight: 8 }} title="Share">🔗</button>
+Line 729: <button onClick={() => openLink(job.link)} style={{

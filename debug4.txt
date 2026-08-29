@@ -1,0 +1,10 @@
+                                padding: '8px 0',
+                                borderRadius: '6px',
+                                border: 'none',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                              }}>
+                                Apply Now 
+                              </button>
+                              <button style={{

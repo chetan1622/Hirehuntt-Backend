@@ -1,0 +1,15 @@
+<div style={{ padding: '0 16px 16px', borderTop: '1px solid #E5E7EB' }}>
+{day.jobs.length === 0 ? (
+<p style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', margin: '20px 0' }}>No jobs matched your criteria on this day.</p>
+) : (
+<div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+{day.jobs.map((job, idx) => {
+const score = job.match_info?.score || 0;
+const badgeColor = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#EF4444';
+const badgeBg = score >= 80 ? '#ECFDF5' : score >= 50 ? '#FFFBEB' : '#FEF2F2';
+
+return (
+<div key={idx} style={{ padding: 12, border: '1px solid #F3F4F6', borderRadius: 8, background: '#F9FAFB' }}>
+<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+<h5 style={{ fontSize: 15, margin: 0, fontWeight: 600, color: '#111827' }}>
+{job.title}

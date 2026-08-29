@@ -1,0 +1,50 @@
+    try {
+      const res = await fetch(`${API}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), otp: otp.trim(), new_password: password.trim() })
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.detail || 'Failed to reset password'); setLoading(false); return; }
+      setSuccess(data.message); setView('login')
+    } catch (err) { setError('Network error.') }
+    setLoading(false)
+  }
+
+  return (
+    <div className="auth-wrapper">
+      <div className="auth-logo">
+        <div style={{display:"flex", alignItems:"center", justifyContent:"center", gap: 10}}>
+          <img src="/h_logo.jpg" alt="Logo" style={{height: 32, borderRadius: 6}}/> Hire Huntt
+        </div>
+        <span>Smart Job Matching & Resume Analysis</span>
+      </div>
+      
+      <div className="auth-card">
+        { (view === 'login' || view === 'register') && (
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 4, marginBottom: 20, gap: 4 }}>
+            <button
+              onClick={() => {setView('login'); setError(''); setSuccess(''); setResendCount(0)}}
+              style={{
+                flex: 1, padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                background: view === 'login' ? 'var(--accent-indigo)' : 'transparent',
+                color: view === 'login' ? '#fff' : 'var(--text-muted)'
+              }}> Login</button>
+            <button
+              onClick={() => {setView('register'); setError(''); setSuccess(''); setResendCount(0)}}
+              style={{
+                flex: 1, padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                background: view === 'register' ? 'var(--accent-indigo)' : 'transparent',
+                color: view === 'register' ? '#fff' : 'var(--text-muted)'
+              }}> Create Account</button>
+          </div>
+        )}
+
+        <h2>
+          {view === 'register' ? 'Create New Account' : 
+           view === 'login' ? 'Welcome Back' : 
+           view === 'verify' ? 'Verify Email' : 
+           view === 'forgot' ? 'Forgot Password' : 'Reset Password'}
+        </h2>
+
+        {error && <p style={{ color: '#ef4444', fontSize: '12px', marginBottom: '10px', background: 'rgba(239,68,68,0.08)', padding: '8px 10px', borderRadius: 6 }}>{error}</p>}

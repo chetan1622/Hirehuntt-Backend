@@ -1,0 +1,22 @@
+function ReviewsCarousel() {
+  const [reviews, setReviews] = useState([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  useEffect(() => {
+    fetch(`${API}/reviews/approved`).then(r => r.json()).then(data => {
+      setReviews(data)
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (reviews.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex(prev => (prev + 1) % reviews.length)
+      }, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [reviews.length])
+
+  if (reviews.length === 0) return null
+
+  const review = reviews[currentIndex]

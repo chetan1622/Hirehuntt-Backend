@@ -1,0 +1,150 @@
+  const [toastMsg, setToastMsg] = useState('')
+  const [toastVisible, setToastVisible] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [currentScreen, setCurrentScreen] = useState('auto') // auto, plan_choice, payment
+  const [footerModal, setFooterModal] = useState(null) // null, 'about', 'contact', 'terms'
+
+  // On app load: check localStorage for saved session (48hr window)
+  useEffect(() => {
+    const savedTerms = localStorage.getItem('jh_terms_accepted')
+    if (savedTerms === 'true') setTermsAccepted(true)
+
+    const savedSession = localStorage.getItem('jh_session')
+    if (savedSession) {
+      try {
+        const session = JSON.parse(savedSession)
+        const loginTime = new Date(session.loginTime)
+        const now = new Date()
+        const hoursDiff = (now - loginTime) / (1000 * 60 * 60)
+        if (hoursDiff < 8760) { // Keep logged in for 1 year instead of 48 hours
+          setUserId(session.userId)
+          setUsername(session.username)
+          setIsAdmin(session.isAdmin)
+          setPaymentStatus(session.paymentStatus || 'unpaid')
+          setPlanType(session.planType || 'unpaid')
+          if (session.isAdmin) {
+            setActiveTab('admin')
+          }
+        } else {
+          localStorage.removeItem('jh_session')
+        }
+      } catch {
+        localStorage.removeItem('jh_session')
+      }
+    }
+  }, [])
+
+  // Fetch subscription status when userId changes
+  useEffect(() => {
+    if (userId) {
+      fetch(`${API}/subscription-status/${userId}`)
+        .then(r => r.json())
+        .then(data => {
+          setSubStatus(data.status)
+          setPlanType(data.plan_type)
+          setPaymentStatus(data.payment_status)
+        })
+        .catch(() => {})
+    }
+  }, [userId])
+
+  const showToast = (msg) => {
+    setToastMsg(msg)
+    setToastVisible(true)
+    setTimeout(() => setToastVisible(false), 3500)
+  }
+
+  const handleLogin = async (id, name, is_admin = false) => {
+    let pStatus = 'unpaid'
+    let pType = 'unpaid'
+    try {
+      const res = await fetch(`${API}/profile/${id}`)
+      if (res.ok) {
+        const data = await res.json()
+        pStatus = data.payment_status || 'unpaid'
+        pType = data.plan_type || 'unpaid'
+      }
+    } catch {}
+
+    setUserId(id)
+    setUsername(name)
+    setIsAdmin(is_admin)
+    setPaymentStatus(pStatus)
+    setPlanType(pType)
+    setCurrentScreen('auto')
+    if (is_admin) {
+      setActiveTab('admin')
+    } else {
+      setActiveTab('profile')
+    }
+
+    localStorage.setItem('jh_session', JSON.stringify({
+      userId: id,
+      username: name,
+      isAdmin: is_admin,
+      paymentStatus: pStatus,
+      planType: pType,
+      loginTime: new Date().toISOString()
+    }))
+  }
+
+  const handleLogout = () => {
+    setUserId(null)
+    setUsername('')
+    setIsAdmin(false)
+    setPaymentStatus('unpaid')
+    setPlanType('unpaid')
+    setSubStatus(null)
+    setActiveTab('profile')
+    setCurrentScreen('auto')
+    localStorage.removeItem('jh_session')
+  }
+
+  const handleTermsAccept = () => {
+    setTermsAccepted(true)
+    localStorage.setItem('jh_terms_accepted', 'true')
+  }
+
+  // Determine if user has active access
+  const hasAccess = isAdmin || planType === 'admin' || 
+    subStatus === 'active' || subStatus === 'trial_active' || 
+    (subStatus === null && (planType === 'premium' || planType === 'trial')) // fallback during loading
+
+  let content;
+
+  // Step 1: Show T&C first time
+  if (!termsAccepted) {
+    content = <TermsPage onAccept={handleTermsAccept} />
+  }
+  // Step 2: Show Login if not logged in
+  else if (!userId) {
+    content = <AuthPage onLogin={handleLogin} />
+  }
+  // If payment is pending approval, show pending screen
+  else if (paymentStatus === 'pending_approval' && !isAdmin) {
+    content = (
+      <div className="auth-wrapper">
+        <div className="payment-card">
+          <div style={{ fontSize: 56, marginBottom: 16, textAlign: 'center' }}></div>
+          <h2 style={{ textAlign: 'center' }}>Payment Pending Approval</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 8, lineHeight: 1.6, textAlign: 'center' }}>
+            Your payment screenshot has been submitted for verification.<br />
+            <strong>You will get access once the admin approves your payment.</strong><br />
+            This usually takes a few hours.
+          </p>
+          <button className="logout-btn" onClick={handleLogout} style={{ marginTop: 20, width: '100%' }}>Logout</button>
+        </div>
+      </div>
+    )
+  }
+  // Step 3: If user explicitly chose plan_choice or payment screen
+  else if (currentScreen === 'plan_choice' || (!hasAccess && currentScreen === 'auto')) {
+    content = (
+      <PlanChoicePage 
+        userId={userId} 
+        onTrialChosen={() => {
+          setPlanType('trial')
+          setPaymentStatus('trial_active')
+          setSubStatus('trial_active')
+          setCurrentScreen('auto')
+          // Update session safely

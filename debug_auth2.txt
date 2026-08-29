@@ -1,0 +1,60 @@
+        {success && <p style={{ color: '#10b981', fontSize: '12px', marginBottom: '10px' }}>{success}</p>}
+
+        {view === 'register' && (
+          <form onSubmit={handleRegister}>
+            <div className="form-group"><label>Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Choose a username"/></div>
+            <div className="form-group"><label>Email Address</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your_email@gmail.com"/></div>
+            <div className="form-group">
+              <label>Password</label>
+              <div style={{display:'flex', position:'relative'}}>
+                <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} style={{flex: 1}} placeholder="Create a password"/>
+                <span onClick={() => setShowPassword(!showPassword)} style={{position:'absolute', right:10, top:10, cursor:'pointer'}}></span>
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Confirm Password</label>
+              <div style={{display:'flex', position:'relative'}}>
+                <input type={showConfirm ? "text" : "password"} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{flex: 1}} placeholder="Re-enter password"/>
+                <span onClick={() => setShowConfirm(!showConfirm)} style={{position:'absolute', right:10, top:10, cursor:'pointer'}}></span>
+              </div>
+            </div>
+            <button className="btn-primary" type="submit" disabled={loading}>{loading ? '' : 'Send Verification OTP'}</button>
+          </form>
+        )}
+
+        {view === 'verify' && (
+          <form onSubmit={handleVerify}>
+            <div className="form-group"><label>Enter OTP sent to {email}</label><input type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="6-digit OTP"/></div>
+            <button className="btn-primary" type="submit" disabled={loading}>{loading ? '' : 'Verify & Login'}</button>
+            <p style={{ textAlign: 'center', fontSize: 12, marginTop: 14 }}>
+              <span style={{ color: resendCount >= 2 ? 'var(--text-muted)' : 'var(--accent-indigo)', cursor: resendCount >= 2 ? 'not-allowed' : 'pointer' }} onClick={(e) => resendCount < 2 && handleResendOTP(e, false)}>
+                {resendCount >= 2 ? 'Try again later' : 'Resend OTP'}
+              </span>
+            </p>
+          </form>
+        )}
+
+        {view === 'login' && (
+          <form onSubmit={handleLogin}>
+            <div className="form-group"><label>Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter your username"/></div>
+            <div className="form-group">
+              <label>Password</label>
+              <div style={{display:'flex', position:'relative'}}>
+                <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} style={{flex: 1}} placeholder="Enter your password"/>
+                <span onClick={() => setShowPassword(!showPassword)} style={{position:'absolute', right:10, top:10, cursor:'pointer'}}></span>
+              </div>
+            </div>
+            <button className="btn-primary" type="submit" disabled={loading}>{loading ? '' : ' Login'}</button>
+            <p style={{ textAlign: 'center', fontSize: 12, marginTop: 14 }}>
+              <span style={{ color: 'var(--accent-indigo)', cursor: 'pointer' }} onClick={() => setView('forgot')}>Forgot Password?</span>
+            </p>
+          </form>
+        )}
+
+        {view === 'forgot' && (
+          <form onSubmit={handleForgot}>
+            <div className="form-group"><label>Username</label><input type="text" value={username} onChange={e => setUsername(e.target.value)}/></div>
+            <div className="form-group"><label>Registered Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)}/></div>
+            <button className="btn-primary" type="submit" disabled={loading}>{loading ? '' : 'Send Reset OTP'}</button>
+            <p style={{ textAlign: 'center', fontSize: 12, marginTop: 14 }}><span style={{ color: 'var(--accent-indigo)', cursor: 'pointer' }} onClick={() => setView('login')}>Back to Login</span></p>
+          </form>
