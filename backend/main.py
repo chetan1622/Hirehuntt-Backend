@@ -227,18 +227,26 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     if len(user.password.strip()) < 4:
         raise HTTPException(status_code=400, detail="Password must be at least 4 characters long.")
 
-    otp = str(random.randint(100000, 999999))
-    registration_cache[user.email.strip()] = {
-        "username": user.username.strip(),
-        "password": user.password.strip(),
-        "otp": otp,
-        "expires": datetime.utcnow() + timedelta(minutes=10)
-    }
+    new_user = User(
+        username=user.username.strip(),
+        password_hash=user.password.strip(),
+        is_admin=0,
+        last_active=datetime.utcnow()
+    )
+    db.add(new_user)
+    db.flush()
     
-    if not send_otp_email(user.email.strip(), otp, is_registration=True):
-        raise HTTPException(status_code=500, detail="Failed to send OTP email.")
-        
-    return {"message": "OTP sent to email. Please verify.", "require_otp": True}
+    new_profile = Profile(
+        user_id=new_user.id,
+        receiver_email=user.email.strip(),
+        plan_type='free',
+        payment_status='unpaid',
+        subscription_ends_at=datetime.utcnow() + timedelta(days=3)
+    )
+    db.add(new_profile)
+    db.commit()
+    
+    return {"message": "Account created successfully!", "user_id": new_user.id, "username": new_user.username, "is_admin": False, "require_otp": False}
 
 @app.post("/api/verify-registration-otp")
 def verify_registration_otp(data: VerifyOTP, db: Session = Depends(get_db)):
