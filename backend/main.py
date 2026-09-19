@@ -169,14 +169,14 @@ def send_otp_email(receiver_email, otp, is_registration=True):
         import requests
         api_key = config.RESEND_API_KEY
         subject = "HireHuntt - Email Verification OTP" if is_registration else "HireHuntt - Password Reset OTP"
-        body = f"Hello,
+        body = f"""Hello,
 
 Your OTP is: {otp}
 
 This OTP is valid for 10 minutes.
 
 Regards,
-HireHuntt Team"
+HireHuntt Team"""
         headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
         payload = {"from": f"HireHuntt <{sender_email}>", "to": [receiver_email], "subject": subject, "text": body}
         try:
@@ -187,14 +187,14 @@ HireHuntt Team"
     
     # Fallback to SMTP
     subject = "HireHuntt - Email Verification OTP" if is_registration else "HireHuntt - Password Reset OTP"
-    body = f"Hello,
+    body = f"""Hello,
 
 Your OTP is: {otp}
 
 This OTP is valid for 10 minutes.
 
 Regards,
-HireHuntt Team"
+HireHuntt Team"""
     msg = MIMEText(body)
     msg['Subject'] = subject
     msg['From'] = f"HireHuntt <{sender_email}>"
