@@ -212,6 +212,7 @@ HireHuntt Team"""
         return False
 
 
+@app.post('/api/register')
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.username == user.username.strip()).first()
     if existing_user:
