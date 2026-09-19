@@ -201,8 +201,8 @@ HireHuntt Team"""
     msg['To'] = receiver_email
     
     try:
-        server = smtplib.SMTP(os.getenv('SMTP_SERVER', 'smtp.gmail.com'), int(os.getenv('SMTP_PORT', '587')))
-        server.starttls()
+        server = smtplib.SMTP_SSL(os.getenv('SMTP_SERVER', 'smtp.gmail.com'), int(os.getenv('SMTP_PORT', '465')), timeout=10)
+        # server.starttls()
         server.login(sender_email, sender_password)
         server.sendmail(sender_email, [receiver_email], msg.as_string())
         server.quit()
