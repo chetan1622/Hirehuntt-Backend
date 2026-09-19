@@ -158,43 +158,60 @@ registration_cache = {}
 otp_cache = {}
 
 def send_otp_email(receiver_email, otp, is_registration=True):
-    import requests
+    import smtplib
+    from email.mime.text import MIMEText
+    import os
     
     sender_email = config.SENDER_EMAIL
-    api_key = getattr(config, "RESEND_API_KEY", None)
+    sender_password = os.getenv('SENDER_PASSWORD')
     
-    if not api_key:
-        print("Resend API Key not provided.")
-        return False
+    if getattr(config, "RESEND_API_KEY", None):
+        import requests
+        api_key = config.RESEND_API_KEY
+        subject = "HireHuntt - Email Verification OTP" if is_registration else "HireHuntt - Password Reset OTP"
+        body = f"Hello,
 
-    subject = "HireHuntt - Email Verification OTP" if is_registration else "HireHuntt - Password Reset OTP"
-    body = f"Hello,\n\nYour OTP is: {otp}\n\nThis OTP is valid for 10 minutes.\n\nRegards,\nHireHuntt Team"
+Your OTP is: {otp}
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
+This OTP is valid for 10 minutes.
 
-    payload = {
-        "from": f"HireHuntt <{sender_email}>",
-        "to": [receiver_email],
-        "subject": subject,
-        "text": body
-    }
-
-    try:
-        response = requests.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10)
-        if response.status_code in [200, 201]:
-            print("OTP sent successfully via Resend API.")
+Regards,
+HireHuntt Team"
+        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        payload = {"from": f"HireHuntt <{sender_email}>", "to": [receiver_email], "subject": subject, "text": body}
+        try:
+            requests.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10)
             return True
-        else:
-            print(f"Error sending OTP via Resend: {response.status_code} - {response.text}")
-            return False
+        except:
+            pass
+    
+    # Fallback to SMTP
+    subject = "HireHuntt - Email Verification OTP" if is_registration else "HireHuntt - Password Reset OTP"
+    body = f"Hello,
+
+Your OTP is: {otp}
+
+This OTP is valid for 10 minutes.
+
+Regards,
+HireHuntt Team"
+    msg = MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = f"HireHuntt <{sender_email}>"
+    msg['To'] = receiver_email
+    
+    try:
+        server = smtplib.SMTP(os.getenv('SMTP_SERVER', 'smtp.gmail.com'), int(os.getenv('SMTP_PORT', '587')))
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, [receiver_email], msg.as_string())
+        server.quit()
+        return True
     except Exception as e:
-        print(f"Exception sending OTP via Resend: {e}")
+        print(f"Error sending OTP via SMTP: {e}")
         return False
 
-@app.post("/api/register")
+
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.username == user.username.strip()).first()
     if existing_user:

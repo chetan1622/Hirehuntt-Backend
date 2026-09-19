@@ -179,12 +179,54 @@ def send_email_report(matched_jobs, receiver_email, custom_sender_email=None, cu
     </html>
     """
 
+
     import requests
+    import smtplib
+    import os
 
     api_key = getattr(config, "RESEND_API_KEY", None)
-    if not api_key:
-        print("Resend API Key not provided. Cannot send report.")
+    if api_key:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "from": f"HireHuntt <{sender_email}>",
+            "to": [receiver_email],
+            "subject": f"Daily Job Match Report - {len(matched_jobs)} Jobs Found",
+            "html": html_content
+        }
+        try:
+            print(f"Sending email report via Resend API to {receiver_email}...")
+            response = requests.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10)
+            if response.status_code in [200, 201]:
+                print("Email sent successfully via Resend!")
+                return True
+        except Exception as e:
+            print(f"Exception sending email report via Resend: {e}")
+    
+    # Fallback to SMTP
+    try:
+        sender_password = os.getenv('SENDER_PASSWORD') or custom_sender_password
+        print(f"Falling back to SMTP for {receiver_email}...")
+        
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"Daily Job Match Report - {len(matched_jobs)} Jobs Found"
+        msg['From'] = f"HireHuntt <{sender_email}>"
+        msg['To'] = receiver_email
+        msg.attach(MIMEText(html_content, 'html'))
+        
+        server = smtplib.SMTP(os.getenv('SMTP_SERVER', 'smtp.gmail.com'), int(os.getenv('SMTP_PORT', '587')))
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, [receiver_email], msg.as_string())
+        server.quit()
+        print("Email sent successfully via SMTP!")
+        return True
+    except Exception as e:
+        print(f"Exception sending email report via SMTP: {e}")
         return False
+
 
     headers = {
         "Authorization": f"Bearer {api_key}",
