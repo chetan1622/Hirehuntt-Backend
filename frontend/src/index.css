@@ -3,19 +3,19 @@
    ============================================ */
 
 :root {
-  --bg-dark: #0a0e1a;
-  --bg-card: rgba(15, 20, 40, 0.85);
-  --bg-glass: rgba(255, 255, 255, 0.04);
-  --bg-glass-hover: rgba(255, 255, 255, 0.08);
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --border-glass-active: rgba(99, 102, 241, 0.5);
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent-indigo: #6366f1;
-  --accent-indigo-glow: rgba(99, 102, 241, 0.3);
-  --accent-emerald: #10b981;
-  --accent-emerald-glow: rgba(16, 185, 129, 0.3);
+  --bg-dark: #0c0a09;
+  --bg-card: rgba(28, 25, 23, 0.85);
+  --bg-glass: rgba(245, 158, 11, 0.05);
+  --bg-glass-hover: rgba(245, 158, 11, 0.1);
+  --border-glass: rgba(245, 158, 11, 0.15);
+  --border-glass-active: rgba(245, 158, 11, 0.5);
+  --text-primary: #fffbeb;
+  --text-secondary: #fcd34d;
+  --text-muted: #a8a29e;
+  --accent-indigo: #f59e0b;
+  --accent-indigo-glow: rgba(245, 158, 11, 0.35);
+  --accent-emerald: #fbbf24;
+  --accent-emerald-glow: rgba(251, 191, 36, 0.3);
   --accent-amber: #f59e0b;
   --accent-red: #ef4444;
   --accent-blue: #3b82f6;
@@ -23,7 +23,7 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
-  --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.15);
+  --shadow-glow: 0 0 30px rgba(245, 158, 11, 0.15);
   --font-heading: 'Outfit', sans-serif;
   --font-body: 'Inter', sans-serif;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -56,8 +56,8 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   background-image:
-    radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 100%, rgba(16, 185, 129, 0.06) 0%, transparent 60%);
+    radial-gradient(ellipse at 20% 0%, rgba(245, 158, 11, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(217, 119, 6, 0.1) 0%, transparent 60%);
 }
 
 /* ============== Layout ============== */
@@ -227,7 +227,7 @@ body {
 }
 
 .role-chip.selected {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(16, 185, 129, 0.15));
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.15));
   border-color: var(--accent-indigo);
   color: var(--text-primary);
   box-shadow: 0 0 12px var(--accent-indigo-glow);
@@ -244,7 +244,7 @@ body {
   padding: 14px;
   border: none;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--accent-indigo), #8b5cf6);
+  background: linear-gradient(135deg, var(--accent-indigo), #d97706);
   color: #fff;
   font-size: 14px;
   font-weight: 600;
@@ -319,7 +319,7 @@ body {
 
 /* ============== Upload Box ============== */
 .upload-box {
-  background: rgba(99, 102, 241, 0.03);
+  background: rgba(245, 158, 11, 0.03);
   border: 2px dashed var(--border-glass-active);
   border-radius: var(--radius-md);
   padding: 30px 20px;
@@ -339,15 +339,15 @@ body {
     45deg,
     transparent,
     transparent 10px,
-    rgba(99, 102, 241, 0.02) 10px,
-    rgba(99, 102, 241, 0.02) 20px
+    rgba(245, 158, 11, 0.02) 10px,
+    rgba(245, 158, 11, 0.02) 20px
   );
   pointer-events: none;
 }
 
 .upload-box:hover {
   border-color: var(--accent-indigo);
-  background: rgba(99, 102, 241, 0.08);
+  background: rgba(245, 158, 11, 0.08);
 }
 
 .upload-box.uploaded {

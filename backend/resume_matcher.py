@@ -5,6 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 COMMON_SKILLS = [
+    # Data & IT
     "python", "sql", "r language", "tableau", "power bi", "powerbi", "excel", "pandas", "numpy", 
     "scikit-learn", "sklearn", "tensorflow", "pytorch", "keras", "machine learning", "deep learning", 
     "nlp", "natural language processing", "computer vision", "statistics", "probability", "big data", 
@@ -12,7 +13,12 @@ COMMON_SKILLS = [
     "data visualization", "data wrangling", "data cleaning", "etl", "data warehousing", "snowflake", 
     "redshift", "bigquery", "postgres", "postgresql", "mysql", "mongodb", "seaborn", "matplotlib", 
     "regression", "classification", "clustering", "time series", "a/b testing", "ab testing", "airflow", 
-    "dashboard", "excel macros", "vba", "dax", "power query", "predictive modeling", "spss", "sas"
+    "dashboard", "excel macros", "vba", "dax", "power query", "predictive modeling", "spss", "sas",
+    # Engineering & General
+    "autocad", "solidworks", "matlab", "ansys", "plc", "scada", "hvac", "thermodynamics", "circuit design", 
+    "embedded c", "microcontroller", "vlsi", "cad", "cam", "revit", "etabs", "staad", "structural analysis", 
+    "catia", "creo", "manufacturing", "six sigma", "lean", "quality control", "arduino", "raspberry pi",
+    "project management", "agile", "scrum", "jira", "sap", "crm", "salesforce"
 ]
 
 def extract_text_from_pdf(pdf_path):
@@ -59,8 +65,8 @@ class ResumeMatcher:
 
     def calculate_match(self, job_desc_text, allowed_roles=None):
         """
-        Calculates similarity scores of a job description against both resumes.
-        If allowed_roles is provided, we restrict checking to those.
+        Calculates similarity scores of a job description against uploaded resumes.
+        Automatically adapts to any role, including engineering, by comparing against whichever resumes exist.
         """
         cleaned_jd = clean_text(job_desc_text)
         if not cleaned_jd:
@@ -69,23 +75,23 @@ class ResumeMatcher:
         ds_score = 0
         da_score = 0
         
-        # Calculate scores only if we have the resume and the role is allowed
-        check_ds = allowed_roles is None or "Data Scientist" in allowed_roles
-        check_da = allowed_roles is None or "Data Analyst" in allowed_roles
-        
-        if self.ds_resume_text and check_ds:
+        if self.ds_resume_text:
             ds_score = self._compute_cosine_similarity(self.ds_resume_text, cleaned_jd)
-        if self.da_resume_text and check_da:
+        if self.da_resume_text:
             da_score = self._compute_cosine_similarity(self.da_resume_text, cleaned_jd)
             
-        if ds_score >= da_score:
-            best_match = "Data Science"
+        if ds_score >= da_score and self.ds_resume_text:
+            best_match = "Primary Resume"
             best_score = ds_score
             best_resume_text = self.ds_resume_text
-        else:
-            best_match = "Data Analyst"
+        elif self.da_resume_text:
+            best_match = "Secondary Resume"
             best_score = da_score
             best_resume_text = self.da_resume_text
+        else:
+            best_match = "None"
+            best_score = 0.0
+            best_resume_text = ""
             
         missing = self._find_missing_keywords(best_resume_text, cleaned_jd)
         
@@ -93,7 +99,7 @@ class ResumeMatcher:
             "ds_score": int(ds_score * 100),
             "da_score": int(da_score * 100),
             "best_match": best_match if best_score > 0 else "None",
-            "score": max(int(best_score * 100), 85) if not missing else int(best_score * 100),
+            "score": max(int(best_score * 100), 85) if not missing and best_score > 0 else int(best_score * 100),
             "missing_keywords": missing
         }
 

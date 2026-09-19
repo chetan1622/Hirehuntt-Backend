@@ -71,8 +71,8 @@ const EXPERIENCE_LEVELS = [
 ]
 
 const JOB_LEVELS = [
-  'Entry Level', 'Mid Level', 'Senior / Professional',
-  'Internship', 'Contract', 'Any Level'
+  'Fresher (0 Years)', 'Entry Level', 'Mid Level', 'Senior / Professional',
+  'Internship', 'Contract'
 ]
 
 // Toast notification component
@@ -335,12 +335,19 @@ function AuthPage({ onLogin }) {
             </p>
           </form>
         )}
-      </div>
-    </div>
-  )
-}
 
-// Profile Tab
+          { (view === 'login' || view === 'register') && (
+            <div style={{ marginTop: 24, fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.5, background: 'var(--bg-glass)', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--border-glass)' }}>
+              <span style={{ fontSize: 14 }}>🛡️</span> <strong style={{ color: 'var(--text-primary)' }}>100% Data Privacy Guaranteed</strong><br />
+              Your personal data and resumes are securely encrypted and stored exclusively within our isolated database. We strictly comply with data protection standards and <strong>do not share, sell, or distribute</strong> your information to any third parties. There is zero risk of data leakage.
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+  
+  // Profile Tab
 function ProfileTab({ userId, toast, onExpired }) {
   const [name, setName] = useState('')
   const [qualification, setQualification] = useState('')
@@ -348,7 +355,7 @@ function ProfileTab({ userId, toast, onExpired }) {
   const [roleInput, setRoleInput] = useState('')
   const [skills, setSkills] = useState('')
   const [experience, setExperience] = useState('')
-  const [jobLevel, setJobLevel] = useState('Any Level')
+  const [jobLevel, setJobLevel] = useState('Entry Level')
   const [location, setLocation] = useState('India')
   const [receiverEmail, setReceiverEmail] = useState('')
   const [dsUploaded, setDsUploaded] = useState(false)
@@ -366,7 +373,7 @@ function ProfileTab({ userId, toast, onExpired }) {
       setRoles(data.searching_roles || [])
       setSkills(data.skills || '')
       setExperience(data.experience || '')
-      setJobLevel(data.job_level || 'Any Level')
+      setJobLevel(data.job_level || 'Entry Level')
       setLocation(data.location || 'India')
       setReceiverEmail(data.receiver_email || '')
       setDsUploaded(data.ds_resume_uploaded)
@@ -765,75 +772,121 @@ function LearningTab() {
   )
 }
 
-function ReelsTab() {
-  const [shorts, setShorts] = useState([])
-  const [loading, setLoading] = useState(true)
+function ATSTab() {
+  const [jd, setJd] = useState('')
+  const [resume, setResume] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState('')
 
-  useEffect(() => {
-    fetch(`${API}/shorts`)
-      .then(r => r.json())
-      .then(data => {
-        if (data && data.length > 0) {
-          setShorts(data)
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      setLoading(true); setError('');
+      try {
+        const res = await fetch(`${API}/parse-pdf-base64`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_base64: reader.result })
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setResume(data.text)
         } else {
-          setShorts([
-            { id: "dQw4w9WgXcQ", title: "Job Interview Tips", author: "System" }
-          ])
+          setError('Failed to extract text from PDF')
         }
-        setLoading(false)
-      })
-      .catch(() => {
-        setShorts([{ id: "dQw4w9WgXcQ", title: "Job Interview Tips", author: "System" }])
-        setLoading(false)
-      })
-  }, [])
+      } catch { setError('Network error during upload') }
+      setLoading(false);
+    }
+  }
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 40 }}><span className="spinner"></span></div>
+  const handleCheck = async () => {
+    if (!jd.trim() || !resume.trim()) return setError('Please paste both Job Description and Resume text.')
+    setLoading(true); setError(''); setResult(null);
+    try {
+      const res = await fetch(`${API}/ats-check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jd_text: jd, resume_text: resume })
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.detail || 'ATS Check failed')
+      } else {
+        const data = await res.json()
+        setResult(data)
+      }
+    } catch { setError('Network error') }
+    setLoading(false)
+  }
 
   return (
-    <div className="reels-tab" style={{ padding: 0, margin: '-24px -16px', height: '100vh', overflowY: 'scroll', scrollSnapType: 'y mandatory', backgroundColor: 'black' }}>
-      {shorts.map((video, i) => (
-        <div key={i} style={{ height: '100vh', width: '100%', scrollSnapAlign: 'start', position: 'relative' }}>
-          <iframe 
-            src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&mute=1&controls=1&playsinline=1&rel=0`}
-            style={{ width: '100%', height: '100%', border: 'none' }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          ></iframe>
-          <div style={{ position: 'absolute', bottom: 120, left: 16, right: 16, color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)', zIndex: 20 }}>
-            <h3 style={{ margin: 0, fontSize: 18 }}>{video.author}</h3>
-            <p style={{ margin: '4px 0 0', fontSize: 14 }}>{video.title}</p>
+    <div className="ats-tab">
+      <div style={{ textAlign: 'center', marginBottom: 20 }}>
+        <h2>🚀 AI ATS Checker</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Instantly check your resume match against any Job Description using our advanced AI.</p>
+      </div>
+
+      {error && <div style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: 10, borderRadius: 8, marginBottom: 15, fontSize: 13 }}>{error}</div>}
+
+      <div className="form-group">
+        <label>Job Description</label>
+        <textarea rows="6" placeholder="Paste the full job description here..." value={jd} onChange={e => setJd(e.target.value)} style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid var(--border-color)', resize: 'vertical' }}></textarea>
+      </div>
+
+
+      <div className="form-group">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <label style={{ marginBottom: 0 }}>Your Resume (Text)</label>
+          <div>
+             <input type="file" id="ats-resume-upload" accept=".pdf" style={{ display: 'none' }} onChange={handleFileUpload} />
+             <button className="btn-secondary" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => document.getElementById('ats-resume-upload').click()}>
+               📄 Upload PDF instead
+             </button>
           </div>
         </div>
-      ))}
+        <textarea rows="6" placeholder="Paste your resume text here..." value={resume} onChange={e => setResume(e.target.value)} style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid var(--border-color)', resize: 'vertical' }}></textarea>
+      </div>
+
+      <button className="btn-primary" onClick={handleCheck} disabled={loading} style={{ height: 48, fontSize: 16 }}>
+        {loading ? <span className="spinner"></span> : '🔥 Analyze Match Score'}
+      </button>
+
+      {result && (
+        <div style={{ marginTop: 24, background: 'var(--bg-glass)', padding: 20, borderRadius: 12, border: '1px solid var(--border-glass)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 48, fontWeight: 800, color: result.score >= 75 ? '#10b981' : result.score >= 50 ? '#f59e0b' : '#ef4444' }}>
+              {result.score}%
+            </div>
+            <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>Match Score</div>
+          </div>
+          
+          <div style={{ marginBottom: 20 }}>
+            <h4 style={{ color: '#ef4444', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>⚠️ Missing Keywords</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {result.missing_keywords && result.missing_keywords.length > 0 ? result.missing_keywords.map((kw, i) => (
+                <span key={i} style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: '4px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600 }}>{kw}</span>
+              )) : <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>No major missing keywords!</span>}
+            </div>
+          </div>
+
+          <div>
+            <h4 style={{ color: 'var(--accent-indigo)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>💡 Project Suggestions</h4>
+            <ul style={{ paddingLeft: 20, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {result.project_suggestions && result.project_suggestions.length > 0 ? result.project_suggestions.map((proj, i) => (
+                <li key={i} style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>{proj}</li>
+              )) : <li style={{ fontSize: 13, color: 'var(--text-muted)' }}>No suggestions at this time.</li>}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
-
-function SavedJobsTab({ userId }) {
-  const [savedJobs, setSavedJobs] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch(`${API}/saved-jobs/${userId}`)
-      .then(r => r.json())
-      .then(data => {
-        setSavedJobs(data || [])
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [userId])
-
-  const handleDelete = async (jobId) => {
-    try {
-      const res = await fetch(`${API}/saved-jobs/${userId}/${jobId}`, { method: 'DELETE' })
-      if (res.ok) {
-        setSavedJobs(savedJobs.filter(j => j.id !== jobId))
-      }
-    } catch (e) {
-      console.log('Error deleting job', e)
-    }
-  }
 
   if (loading) return <div style={{ textAlign: 'center', padding: 40 }}>Loading saved jobs...</div>
   if (savedJobs.length === 0) return <div style={{ textAlign: 'center', padding: 40, color: '#6B7280' }}>No saved jobs yet.</div>
@@ -976,6 +1029,31 @@ function AtsCheckerTab({ toast }) {
     }
     setParsing(false)
     e.target.value = null // reset file input
+  }
+
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      setLoading(true); setError('');
+      try {
+        const res = await fetch(`${API}/parse-pdf-base64`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_base64: reader.result })
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setResume(data.text)
+        } else {
+          setError('Failed to extract text from PDF')
+        }
+      } catch { setError('Network error during upload') }
+      setLoading(false);
+    }
   }
 
   const handleCheck = async () => {
@@ -1747,20 +1825,13 @@ export default function App() {
     if (savedSession) {
       try {
         const session = JSON.parse(savedSession)
-        const loginTime = new Date(session.loginTime)
-        const now = new Date()
-        const hoursDiff = (now - loginTime) / (1000 * 60 * 60)
-        if (hoursDiff < 8760) { // Keep logged in for 1 year instead of 48 hours
-          setUserId(session.userId)
-          setUsername(session.username)
-          setIsAdmin(session.isAdmin)
-          setPaymentStatus(session.paymentStatus || 'unpaid')
-          setPlanType(session.planType || 'unpaid')
-          if (session.isAdmin) {
-            setActiveTab('admin')
-          }
-        } else {
-          localStorage.removeItem('jh_session')
+        setUserId(session.userId)
+        setUsername(session.username)
+        setIsAdmin(session.isAdmin)
+        setPaymentStatus(session.paymentStatus || 'unpaid')
+        setPlanType(session.planType || 'unpaid')
+        if (session.isAdmin) {
+          setActiveTab('admin')
         }
       } catch {
         localStorage.removeItem('jh_session')
@@ -1965,7 +2036,7 @@ export default function App() {
                     <span className="icon">💼</span>
                     Jobs
                   </div>
-                  <div className={`nav-tab ${activeTab === 'reels' ? 'active' : ''}`} onClick={() => setActiveTab('reels')}>
+                  <div className={`nav-tab ${activeTab === 'reels' ? 'active' : ''}`} onClick={() => setActiveTab('ats')}>
                     <span className="icon">📱</span>
                     Reels
                   </div>
@@ -1984,7 +2055,7 @@ export default function App() {
         {activeTab === 'logs' && <JobHistoryTab userId={userId} />}
         {activeTab === 'saved' && <SavedJobsTab userId={userId} />}
         {activeTab === 'learning' && <LearningTab />}
-        {activeTab === 'reels' && <ReelsTab />}
+        {activeTab === 'ats' && <ATSTab />}
         {activeTab === 'prep' && <InterviewPrepTab />}
         {activeTab === 'ats' && <AtsCheckerTab toast={showToast} />}
         {activeTab === 'mncs' && <TopMncTab />}

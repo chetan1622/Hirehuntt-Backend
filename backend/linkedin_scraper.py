@@ -16,7 +16,9 @@ def scrape_linkedin_jobs(keywords, location, experience=None, limit=10):
     exp_filter = ""
     if experience:
         exp_str = str(experience).lower()
-        if "fresher" in exp_str or "0" in exp_str or "entry" in exp_str or "intern" in exp_str:
+        if "any" in exp_str or "contract" in exp_str:
+            exp_filter = ""
+        elif "fresher" in exp_str or "0" in exp_str or "entry" in exp_str or "intern" in exp_str:
             exp_filter = "&f_E=1,2"
         elif "1" in exp_str or "2" in exp_str or "3" in exp_str:
             exp_filter = "&f_E=2,3,4"

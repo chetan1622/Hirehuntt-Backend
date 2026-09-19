@@ -20,7 +20,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from backend import config
-from backend.database import engine, Base, init_db, get_db, User, Profile, Log, Review, JobMatchHistory, SavedJob, SessionLocal
+from backend.database import engine, Base, init_db, get_db, User, Profile, Log, Review, JobMatchHistory, SavedJob, SessionLocal, SentJob
 from backend.linkedin_scraper import scrape_linkedin_jobs
 from backend.career_scraper import scrape_career_sites
 from backend.resume_matcher import ResumeMatcher
@@ -66,8 +66,8 @@ def startup_event():
 
     # Start the background scheduler
     scheduler = BackgroundScheduler()
-    # 2 AM daily - delete accounts inactive for 30+ days (skip admins)
-    scheduler.add_job(auto_delete_inactive_users, CronTrigger(hour=2, minute=0))
+    # 2 AM daily - delete accounts inactive for 30+ days (disabled as per user request)
+    # scheduler.add_job(auto_delete_inactive_users, CronTrigger(hour=2, minute=0))
     # 8 AM daily - send job emails to all approved users
     scheduler.add_job(daily_job_email_all_users, CronTrigger(hour=8, minute=0))
     scheduler.start()
@@ -117,6 +117,18 @@ class UserLogin(BaseModel):
 
 class PaymentSubmit(BaseModel):
     transaction_id: str
+
+
+import base64
+
+
+class ParsePdfRequest(BaseModel):
+    file_base64: str
+
+class ResumeUploadRequest(BaseModel):
+    profile_type: str
+    file_base64: str
+    filename: str
 
 class ProfileUpdate(BaseModel):
     name: str
@@ -509,6 +521,37 @@ def upload_resume(user_id: int, profile_type: str = Form(...), file: UploadFile 
     db.commit()
     return {"message": f"{profile_type.upper()} Resume uploaded successfully", "filename": filename}
 
+
+@app.post("/api/upload-resume-base64/{user_id}")
+def upload_resume_base64(user_id: int, request: ResumeUploadRequest, db: Session = Depends(get_db)):
+    profile = db.query(Profile).filter(Profile.user_id == user_id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+        
+    if request.profile_type not in ["ds", "da"]:
+        raise HTTPException(status_code=400, detail="Invalid profile type")
+        
+    try:
+        file_ext = os.path.splitext(request.filename)[1] or '.pdf'
+        filename = f"user_{user_id}_{request.profile_type}_resume{file_ext}"
+        filepath = os.path.join(config.UPLOAD_DIR, filename)
+        
+        file_data = base64.b64decode(request.file_base64.split(',')[1] if ',' in request.file_base64 else request.file_base64)
+        
+        with open(filepath, "wb") as buffer:
+            buffer.write(file_data)
+            
+        if request.profile_type == "ds":
+            profile.ds_resume_path = filepath
+        else:
+            profile.da_resume_path = filepath
+            
+        db.commit()
+        return {"message": f"{request.profile_type.upper()} Resume uploaded successfully", "filename": filename}
+    except Exception as e:
+        print(f"Base64 upload error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Email Logs
 @app.get("/api/logs/{user_id}")
 def get_logs(user_id: int, db: Session = Depends(get_db)):
@@ -582,10 +625,16 @@ def run_job_hunt_pipeline(user_id: int):
         # Fetch job list
         for role in roles:
             for loc in locations:
+                search_keyword = role
+                if profile.qualification and profile.qualification.lower().strip() not in ["", "any", "any degree", "any graduate", "any graduation", "any level"]:
+                    search_keyword = f"{profile.qualification} {role}"
+                    
+                combined_exp = f"{profile.experience or ''} {profile.job_level or ''}".strip()
+                
                 # LinkedIn
-                linkedin_jobs = scrape_linkedin_jobs(role, loc, experience=profile.experience, limit=50)
+                linkedin_jobs = scrape_linkedin_jobs(search_keyword, loc, experience=combined_exp, limit=50)
                 # Career Sites
-                career_jobs = scrape_career_sites(role, loc, experience=profile.experience, limit=10)
+                career_jobs = scrape_career_sites(search_keyword, loc, experience=combined_exp, limit=10)
             
                 for job in linkedin_jobs + career_jobs:
                     if job['link'] not in seen_links:
@@ -693,6 +742,20 @@ async def parse_pdf(file: UploadFile = File(...)):
         return {"text": text}
     except Exception as e:
         print(f"Error parsing PDF: {e}")
+        raise HTTPException(status_code=400, detail="Failed to parse PDF file.")
+
+
+@app.post("/api/parse-pdf-base64")
+async def parse_pdf_base64(request: ParsePdfRequest):
+    try:
+        file_data = base64.b64decode(request.file_base64.split(',')[1] if ',' in request.file_base64 else request.file_base64)
+        reader = PdfReader(io.BytesIO(file_data))
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or ""
+        return {"text": text}
+    except Exception as e:
+        print(f"Error parsing base64 PDF: {e}")
         raise HTTPException(status_code=400, detail="Failed to parse PDF file.")
 
 @app.post("/api/ats-check")
@@ -921,10 +984,16 @@ def daily_job_email_all_users():
                 
                 for role in roles:
                     for loc in locations:
+                        search_keyword = role
+                        if profile.qualification and profile.qualification.lower().strip() not in ["", "any", "any degree", "any graduate", "any graduation", "any level"]:
+                            search_keyword = f"{profile.qualification} {role}"
+                            
+                        combined_exp = f"{profile.experience or ''} {profile.job_level or ''}".strip()
+                        
                         # LinkedIn
-                        linkedin_jobs = scrape_linkedin_jobs(role, loc, experience=profile.experience, limit=50)
+                        linkedin_jobs = scrape_linkedin_jobs(search_keyword, loc, experience=combined_exp, limit=50)
                         # Career Sites
-                        career_jobs = scrape_career_sites(role, loc, experience=profile.experience, limit=5)
+                        career_jobs = scrape_career_sites(search_keyword, loc, experience=combined_exp, limit=5)
                     
                         for job in linkedin_jobs + career_jobs:
                             if job['link'] not in seen_links and job['link'] not in already_sent:
